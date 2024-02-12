@@ -15,12 +15,18 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 add_library(
     b118
+    include/b118/almost_equal.hpp
+    include/b118/equal_within_ulps.hpp
     include/b118/linspace.hpp
     src/file.cpp # CMake can not determine linker language for target without a .cpp file
+
+    # Vendors
+    vendor/cppreference/include/b118/vendor/cppreference/equal_within_ulps.hpp
 )
 target_include_directories(
     b118
     PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/include"
+    PUBLIC "${CMAKE_CURRENT_SOURCE_DIR}/vendor/cppreference/include"
 )
 target_compile_definitions(
     b118
