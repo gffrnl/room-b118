@@ -1,0 +1,28 @@
+# Basic module
+
+set(B118_MODULE_BASIC_HEADERS
+    type_traits.hpp
+    numbers.hpp
+    almost_equal.hpp
+    equal_within_ulps.hpp
+    linspace.hpp
+    # vendors
+    vendor/cppreference/equal_within_ulps.hpp
+)
+
+include(prepend_path_to_files.cmake)
+
+prepend_path_to_files(B118_MODULE_BASIC_HEADERS
+    "${B188_INCLUDE_DIR}/b118"
+    B118_MODULE_BASIC_HEADERS_PREPENDED
+)
+
+set(B118_MODULE_BASIC_HEADERS
+    ${B118_MODULE_BASIC_HEADERS_PREPENDED}
+    PARENT_SCOPE
+)
+
+set(B118_MODULE_BASIC_PUBLIC_HEADERS
+    ${B118_MODULE_BASIC_HEADERS_PREPENDED}
+    PARENT_SCOPE
+)

@@ -1,0 +1,7 @@
+function(prepend_path_to_files FILE_LIST PATH_PREFIX OUTPUT_LIST)
+    set(updated_list "")
+    foreach(file ${${FILE_LIST}})
+        list(APPEND updated_list "${PATH_PREFIX}/${file}")
+    endforeach()
+    set(${OUTPUT_LIST} ${updated_list} PARENT_SCOPE)
+endfunction()
