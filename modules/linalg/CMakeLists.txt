@@ -1,31 +1,41 @@
-# Fractional Laplacian module: b118::frlap
 
-add_library(b118-frlap)
+add_library(b118-linalg)
 
-target_sources(b118-frlap
+target_sources(b118-linalg
     PUBLIC
-        FILE_SET b118_frlap_public_headers
+        FILE_SET b118_linalg_public_headers
             TYPE HEADERS
             FILES
-                ${B188_INCLUDE_DIR}/b118/linspace.hpp
+                b118/linalg.hpp
 )
 
-target_sources(b118-frlap PRIVATE src/file.cpp)
+target_sources(b118-linalg
+    PRIVATE
+        src/b118-linalg.cpp
+)
 
-target_include_directories(b118-frlap PUBLIC "${B188_INCLUDE_DIR}")
+target_include_directories(b118-linalg
+    PUBLIC
+        ${CMAKE_CURRENT_SOURCE_DIR}
+)
 
-# Debug Suffix
+target_link_libraries(b118-linalg
+    PRIVATE
+        b118-base
+)
+
+# Debug Postffix
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
-    set_target_properties(b118-frlap PROPERTIES DEBUG_POSTFIX "d")
+    set_target_properties(b118-linalg PROPERTIES DEBUG_POSTFIX "d")
 endif()
 
 # for CMAKE_INSTALL_INCLUDEDIR definition
 include(GNUInstallDirs)
 
 # install the target and create export-set
-install(TARGETS b118-frlap
-  EXPORT "b118-frlap-targets"
-  FILE_SET b118_frlap_public_headers
+install(TARGETS b118-linalg
+  EXPORT "b118-linalg-targets"
+  FILE_SET b118_linalg_public_headers
   # these get default values from GNUInstallDirs, no need to set them
   #RUNTIME DESTINATION ${CMAKE_INSTALL_BINDIR} # bin
   #LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR} # lib
