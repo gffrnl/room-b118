@@ -4,7 +4,8 @@
  *     Contains:
  *       - Facilities for comparison of floating-point numbers
  *
- *   Copyright (C) 2024  Guilherme F. Fornel <gffrnl@gmail.com>
+ *   Copyright (C) 2024   Guilherme F. Fornel        <gffrnl@gmail.com>
+ *                        Fabio Souto de Azevedo     <fazedo@gmail.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -22,26 +23,34 @@
 
 #pragma once
 
+#include <cstdint>
 #include <cmath>
-#include <functional>
+#include <limits>
 
 namespace b118 {
 
+    // Almost equal
+    // Implementation of numpy `within_tol`
+    // <https://github.com/numpy/numpy/blob/v1.26.0/numpy/core/numeric.py#L2330-L2333>
+    // TODO(fazedo): change atol and rtol to fit the type
+    template<typename Real>
+    inline bool almost_equal(Real x, Real y,
+                             Real atol = 1.0e-5,
+                             Real rtol = 1.0e-8) {
+        return std::fabs(x - y) < atol + rtol * std::fabs(y);
+    }
 
-    // Almost equal (Python within_tol)
-    // TODO: change atol and rtol to fit the type
-    template<typename Real>
-    inline bool almost_equal(Real x, Real y, Real atol = 1.0e-5, Real rtol = 1.0e-8) {
-        return std::less_equal{}(std::fabs(x - y), atol + rtol * std::fabs(y));
-    }
-    
     // Almost equal with `dig` base-10 significant digits
-    // Reference: R.L. Burden and J.D. Faires. Análise Numérica. Cengage Learning, 8 edition, 2013.
+    // Reference: R.L. Burden and J.D. Faires. Análise Numérica.
+    //            Cengage Learnig, 8 edition, 2013.
     template<typename Real>
-    inline bool almost_equal_dig(Real x, Real y, short dig = std::numeric_limits<T>::digits10 - 1) {
-        return std::less{}(
-            std::fabs(x / y - 1),
-            static_cast<Real>(5) / std::pow(static_cast<Real>(10), static_cast<Real>(dig))
-        );
+    inline bool almost_equal_dig(Real x, Real y,
+                                 std::uint16_t dig =
+                                     std::numeric_limits<Real>::digits10 - 1) {
+        return std::fabs(x - y) <
+            (static_cast<Real>(5) /
+                std::pow(static_cast<Real>(10) ,
+                         static_cast<Real>(dig)) * std::abs(y));
     }
-}
+
+}  // namespace b118
