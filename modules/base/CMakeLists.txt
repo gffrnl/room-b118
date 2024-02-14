@@ -10,6 +10,7 @@ target_sources(b118-base
                 b118/numbers.hpp
                 b118/almost_equal.hpp
                 b118/equal_within_ulps.hpp
+                b118/closest_sorted.hpp
                 b118/linspace.hpp
                 # vendors
                 b118/vendor/cppreference/equal_within_ulps.hpp

@@ -1,6 +1,6 @@
 /*   libb118
  *
- *   include/b118/almost_equal.hpp
+ *   modules/base/b118/almost_equal.hpp
  *     Contains:
  *       - Facilities for comparison of floating-point numbers
  *
