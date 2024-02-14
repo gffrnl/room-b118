@@ -1,8 +1,9 @@
 /*   libb118
  *
- *   modules/frlap/b118/frlap/gdm.hpp
+ *   modules/frlap/b118/frlap/gdm/strategy.hpp
  *   
- *   Fractional Laplacian module (main header)
+ *   Strategy concept to represent a coefficient generation strategy
+ *   for a gdm for the fractional Laplacian
  *
  *   Copyright (C) 2024   Guilherme F. Fornel        <gffrnl@gmail.com>
  *                        Fabio Souto de Azevedo     <fazedo@gmail.com>
@@ -27,26 +28,17 @@
 
 namespace b118 {
 namespace frlap {
+namespace gdm {
 
-struct general_differences_method {
-    double ealpha;
-    double deltax;
-    bool verbose;
+struct strategy {
+    virtual ~strategy() {}
 
-    general_differences_method(double frac_expon, double grid_step)
-        : ealpha{frac_expon}, deltax{grid_step}, verbose{false}
-    {}
-
-    virtual ~general_differences_method() {}
-
-    virtual void compute(std::vector<double> const& y      ,
-                         std::size_t                ja     ,
-                         std::size_t                jb     ,
-                         std::vector<double>&       frLap_y) = 0;
+    virtual
+    void generate_coefficients(double  ealpha,
+                               double  deltax,
+                               double* mu) const = 0;
 };
 
-// Syntatic sugar
-using gdm_t = struct general_differences_method;
-
+}  // end namespace gdm
 }  // end namespace frlap
 }  // end namespace b118
