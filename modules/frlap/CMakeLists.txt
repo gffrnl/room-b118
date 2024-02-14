@@ -8,6 +8,8 @@ target_sources(b118-frlap
             FILES
                 b118/frlap.hpp
                 b118/frlap/gdm.hpp
+                b118/frlap/gdm/strategy.hpp
+                b118/frlap/gdm/trunc_uniform.hpp
 )
 
 target_sources(b118-frlap
