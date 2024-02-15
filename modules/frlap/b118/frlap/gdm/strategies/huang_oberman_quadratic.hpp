@@ -1,12 +1,10 @@
 /*   libb118
  *
- *   modules/frlap/b118/frlap/gdm/strategy.hpp
+ *   modules/frlap/b118/frlap/gdm/strategies/huang_oberman_quadratic.hpp
  *   
- *   Strategy concept to represent a coefficient generation strategy
- *   for a gdm for the fractional Laplacian
+ *   Huang & Oberman Quadratic strategy
  *
  *   Copyright (C) 2024   Guilherme F. Fornel        <gffrnl@gmail.com>
- *                        Fabio Souto de Azevedo     <fazedo@gmail.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -23,21 +21,20 @@
  */
 
 #pragma once
-
-#include <vector>
+#include <b118/frlap/gdm/strategy.hpp>
 
 namespace b118 {
 namespace frlap {
 namespace gdm {
+namespace strategies {
 
-struct strategy {
-    virtual ~strategy() {}
-
-    virtual void generate_coefficients(double  ealpha,
-                                       double  deltax,
-                                       double* coeffs, std::size_t n) const = 0;
+struct huang_oberman_quadratic final : public strategy {
+    void generate_coefficients(double  ealpha,
+                               double  deltax,
+                               double* coeffs, std::size_t n) const override;
 };
 
+}  // end namespace strategies
 }  // end namespace gdm
 }  // end namespace frlap
 }  // end namespace b118

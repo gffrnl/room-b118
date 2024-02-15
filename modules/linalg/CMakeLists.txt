@@ -16,11 +16,12 @@ target_sources(b118-linalg
 
 target_include_directories(b118-linalg
     PUBLIC
+        ${CMAKE_SOURCE_DIR}/modules/base
         ${CMAKE_CURRENT_SOURCE_DIR}
 )
 
 target_link_libraries(b118-linalg
-    PRIVATE
+    PUBLIC
         b118-base
 )
 

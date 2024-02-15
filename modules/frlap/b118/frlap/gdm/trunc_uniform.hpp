@@ -29,6 +29,7 @@
 #include <type_traits>
 #include <b118/frlap/gdm.hpp>
 #include <b118/frlap/gdm/strategy.hpp>
+#include <b118/frlap/gdm/strategies/huang_oberman_quadratic.hpp>
 
 namespace b118 {
 namespace frlap {
@@ -198,3 +199,51 @@ void multiplica_a(size_t n0, size_t na, int ja,
 
     return frLap_y;
 }
+
+
+//
+//  syntatic sugars
+//
+
+namespace b118 {
+namespace frlap {
+namespace gdm {
+
+//   typedef trunc_uniform<
+//     strategies::spectral
+//   > trunc_uniform_spec;
+
+//   typedef trunc_uniform<
+//     strategies::spectral_ooura
+//   > trunc_uniform_spec_ooura;
+
+//   typedef trunc_uniform<
+//     strategies::spectral_qawo
+//   > trunc_uniform_spec_qawo;
+
+//   typedef trunc_uniform<
+//     strategies::spectral_tanh_sinh
+//   > trunc_uniform_spec_thsh;
+    
+//   typedef trunc_uniform<
+//     strategies::gorenflo_mainardi
+//   > trunc_uniform_gormai;
+
+//   typedef trunc_uniform<
+//     strategies::huang_oberman_linear
+//   > trunc_uniform_huob1;
+
+//   typedef trunc_uniform<
+//     strategies::huang_oberman_quadratic
+//   > trunc_uniform_huob2;
+
+    using trunc_uniform_huob2 =
+        trunc_uniform<strategies::huang_oberman_quadratic>;
+
+//   typedef trunc_uniform<
+//     strategies::centered_3_point_periodized
+//   > trunc_uniform_3point;
+
+}  // end namespace gdm
+}  // end namespace frlap
+}  // end namespace b118

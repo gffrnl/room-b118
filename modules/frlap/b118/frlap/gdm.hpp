@@ -39,7 +39,7 @@ struct general_differences_method {
 
     virtual ~general_differences_method() {}
 
-    virtual void compute(std::vector<double> const& y      ,
+    virtual void compute(std::vector<double> const & y     ,
                          std::size_t                ja     ,
                          std::size_t                jb     ,
                          std::vector<double>&       frLap_y) = 0;

@@ -23,6 +23,7 @@
 #pragma once
 
 #include <cmath>
+#include <stdexcept>
 #include <b118/numbers.hpp>
 
 namespace b118 {
@@ -54,7 +55,7 @@ namespace frlap {
                                         "(): ealpha must lie between 0 and 2");
 
         return ealpha * std::exp2(ealpha - 1)
-                      * std::pow(b118::frlap::numbers::inv_sqrtpi_v<Real>,
+                      * std::pow(b118::numbers::inv_sqrtpi_v<Real>,
                                  static_cast<Real>(n))
                       * std::exp(std::lgamma((static_cast<Real>(n) + ealpha) /
                                               static_cast<Real>(2)) -
