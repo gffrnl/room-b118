@@ -42,11 +42,6 @@ void multiplica_a(size_t n0, size_t na, int ja,
 #ifdef FRLAP_CONVCORR_INGENUA
 #include <iostream>
 #include <vector>
-// void conv1d_ingenua(size_t n0, size_t na,
-//                                     int ja,
-//                                     std::vector<double> const & mu,
-//                                     std::vector<double> const & y,
-//                                     std::vector<double> *fr);
 
 void conv1d_ingenua(size_t n0, size_t na,
                     double const * const mu,
@@ -54,10 +49,9 @@ void conv1d_ingenua(size_t n0, size_t na,
                     double       * const fr);
 
 void cross1d_ingenua(size_t n0, size_t nb,
-                                       int jb,
-                                       std::vector<double> const & mu,
-                                       std::vector<double> const & y,
-                                       std::vector<double> *fr);
+                     double const * const mu,
+                     double const * const y,
+                     double       * const fr);
 
 
 
@@ -137,12 +131,13 @@ struct trunc_uniform final : public general_differences_method {
         {
 #if defined(FRLAP_CONVCORR_INGENUA)
             {
-                std::vector<double> cross_mu_y(n0);
+                // std::vector<double> cross_mu_y(n0);
                 std::cout << "trunc_uniform(): "
                         << "cross1d_ingenua()" << std::endl;
-                cross1d_ingenua(n0, nb, jb, mu, y, &cross_mu_y);
-                for (std::size_t i = 0; i < n0; ++i)
-                    frLap_y.at(i) += cross_mu_y.at(i);
+                cross1d_ingenua(n0, nb, mu.data() + 1, y.data() + jb + 1,
+                                frLap_y.data());
+                // for (std::size_t i = 0; i < n0; ++i)
+                //     frLap_y.at(i) += cross_mu_y.at(i);
             }
 #else
         std::vector<double> Bb(n0 * nb);
@@ -273,26 +268,9 @@ void multiplica_a(size_t n0, size_t na, int ja,
                         double const * const y,
                         double       * const fr) {
 
-        // for (std::size_t i = 0; i < n0; ++i)
-        //     for (std::ptrdiff_t j = 0; j < na; ++j)
-        //         Ba[i*na + j] = mu[ja+i-j];
-
-        // conv_y[i] = produto interno da linha i de Ba com y
-        // a linha i de Ba é dada por mu[ja+i-j] com j variando de 0 a na-1
-
-        // std::vector<double> conv_y(n0);
-        for (std::size_t i = 0; i < n0; ++i) {
-            fr[i] += cblas_ddot(
-                            na,
-                            //const_cast<double*>(mu) + ja + i + (-na + 1),
-                            const_cast<double*>(mu) + i + (-na + 1),
-                            -1,      // incremento em mu = -1
-                            const_cast<double*>(y),
-                            1);
-        }
-        // Aqui tem um gotcha: se o incremento é negativo, a soma começa
-        // do final:
-        //
+        int const blas_offset = -na + 1;
+        // Compensate shift made by Blas when INCX < 0:
+        //  ...
         //     IX = 1
         //     IY = 1
         //     IF (INCX.LT.0) IX = (-N+1)*INCX + 1
@@ -302,31 +280,29 @@ void multiplica_a(size_t n0, size_t na, int ja,
         //         IX = IX + INCX
         //         IY = IY + INCY
         //     END DO
-        // END IF
+        // ...
+
+        for (std::size_t i = 0; i < n0; ++i) {
+            fr[i] += cblas_ddot(
+                            na,
+                            const_cast<double*>(mu) + i + blas_offset,
+                            -1,      // increment on mu = -1
+                            const_cast<double*>(y),
+                            1);
+        }
     }
 
     void cross1d_ingenua(size_t n0, size_t nb,
-                                       int jb,
-                                       std::vector<double> const & mu,
-                                       std::vector<double> const & y,
-                                       std::vector<double> *fr) {
-
-
-        //  for (std::ptrdiff_t i = 0; i < n0; ++i)
-        //      for (std::size_t j = 0; j < nb; ++j)
-        //          Bb.at(i*nb + j) = mu.at(n0-i+j);
-
-        // cross_y[i] = produto interno da linha i de Bb com y descolado de jb+1
-        // a linha i de Bb é dada por mu[n0-i+j] com j variando de 0 a nb-1
-        // cross_y[i] = cblas_ddot(nb, mu.data() + n0 - i, 1,
-        //                              y.data() + jb + 1, 1);
+                         double const * const mu,
+                         double const * const y,
+                         double       * const fr) {
 
         for (std::size_t i = 0; i < n0; ++i) {
-            (*fr)[i] = cblas_ddot(
+            fr[i] += cblas_ddot(
                             nb,
-                            mu.data() + n0 - i, // - 1,  // + n0 - i,
-                            1,      // incremento em mu = 1
-                            y.data() + jb + 1,
+                            const_cast<double*>(mu) + (n0 - 1) - i,
+                            1,      // increment on mu = 1
+                            const_cast<double*>(y),
                             1);
         }
     }
