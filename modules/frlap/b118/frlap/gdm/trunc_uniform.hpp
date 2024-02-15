@@ -42,17 +42,25 @@ void multiplica_a(size_t n0, size_t na, int ja,
 #ifdef FRLAP_CONVCORR_INGENUA
 #include <iostream>
 #include <vector>
+// void conv1d_ingenua(size_t n0, size_t na,
+//                                     int ja,
+//                                     std::vector<double> const & mu,
+//                                     std::vector<double> const & y,
+//                                     std::vector<double> *fr);
+
 void conv1d_ingenua(size_t n0, size_t na,
-                                    int ja,
-                                    std::vector<double> const & mu,
-                                    std::vector<double> const & y,
-                                    std::vector<double> *fr);
+                    double const * const mu,
+                    double const * const y,
+                    double       * const fr);
 
 void cross1d_ingenua(size_t n0, size_t nb,
                                        int jb,
                                        std::vector<double> const & mu,
                                        std::vector<double> const & y,
                                        std::vector<double> *fr);
+
+
+
 #endif
 
 namespace b118 {
@@ -104,7 +112,7 @@ struct trunc_uniform final : public general_differences_method {
 #elif defined(FRLAP_CONVCORR_INGENUA)
         std::cout << "trunc_uniform(): "
                   << "conv1d_ingenua()" << std::endl;
-        conv1d_ingenua(n0, na, ja, mu, y, &frLap_y);
+        conv1d_ingenua(n0, na, mu.data()+ja, y.data(), frLap_y.data());
 #else
         std::vector<double> Ba(n0 * na);
         std::vector<double> Ya(na);
@@ -261,10 +269,9 @@ void multiplica_a(size_t n0, size_t na, int ja,
 
 #ifdef FRLAP_CONVCORR_INGENUA
     void conv1d_ingenua(size_t n0, size_t na,
-                                       int ja,
-                                       std::vector<double> const & mu,
-                                       std::vector<double> const & y,
-                                       std::vector<double> *fr) {
+                        double const * const mu,
+                        double const * const y,
+                        double       * const fr) {
 
         // for (std::size_t i = 0; i < n0; ++i)
         //     for (std::ptrdiff_t j = 0; j < na; ++j)
@@ -275,11 +282,12 @@ void multiplica_a(size_t n0, size_t na, int ja,
 
         // std::vector<double> conv_y(n0);
         for (std::size_t i = 0; i < n0; ++i) {
-            (*fr)[i] = cblas_ddot(
+            fr[i] += cblas_ddot(
                             na,
-                            mu.data() + ja + i + (-na + 1),
+                            //const_cast<double*>(mu) + ja + i + (-na + 1),
+                            const_cast<double*>(mu) + i + (-na + 1),
                             -1,      // incremento em mu = -1
-                            y.data(),
+                            const_cast<double*>(y),
                             1);
         }
         // Aqui tem um gotcha: se o incremento é negativo, a soma começa
