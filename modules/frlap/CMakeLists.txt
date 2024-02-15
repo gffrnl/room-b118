@@ -1,3 +1,8 @@
+find_library(LIB_OPENBLAS NAMES openblas REQUIRED)
+find_library(LIB_FFTW3 NAMES fftw3 REQUIRED)
+
+message(STATUS "LIB_OPENBLAS = ${LIB_OPENBLAS}")
+message(STATUS "LIB_FFTW3 = ${LIB_FFTW3}")
 
 add_library(b118-frlap)
 
@@ -12,6 +17,8 @@ target_sources(b118-frlap
                 b118/frlap/gdm/trunc_uniform.hpp
                 # strategies
                 b118/frlap/gdm/strategies/huang_oberman_quadratic.hpp
+                # toep.h (TO REMOVE)
+                b118/frlap/detail/toep.h
 )
 
 target_sources(b118-frlap
@@ -20,6 +27,8 @@ target_sources(b118-frlap
         # strategies
         src/gdm/strategies/huang_oberman.cpp
         src/gdm/strategies/huang_oberman_quadratic.cpp
+    PRIVATE
+        src/toep.c
 )
 
 target_include_directories(b118-frlap
@@ -31,6 +40,9 @@ target_include_directories(b118-frlap
 target_link_libraries(b118-frlap
     PUBLIC
         b118-base
+    PRIVATE
+        ${LIB_OPENBLAS}
+        ${LIB_FFTW3}
 )
 
 # Debug Postffix

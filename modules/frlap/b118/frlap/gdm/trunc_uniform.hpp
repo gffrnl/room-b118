@@ -24,33 +24,41 @@
 #pragma once
 
 #include <cblas.h>
-// #include <b118/frlap/detail/third-party/toep.h>
+#include <b118/frlap/detail/toep.h>
 #include <cassert>
 #include <type_traits>
 #include <b118/frlap/gdm.hpp>
 #include <b118/frlap/gdm/strategy.hpp>
 #include <b118/frlap/gdm/strategies/huang_oberman_quadratic.hpp>
 
+
+#ifdef FRLAP_MULTIPLICA_FABIO_BLAS
+#include <iostream>
+void multiplica_a(size_t n0, size_t na, int ja,
+                const std::vector<double>& mu,
+                const std::vector<double>& y,
+                std::vector<double> *fr);
+#endif
+#ifdef FRLAP_CONVCORR_INGENUA
+#include <iostream>
+#include <vector>
+void conv1d_ingenua(size_t n0, size_t na,
+                                    int ja,
+                                    std::vector<double> const & mu,
+                                    std::vector<double> const & y,
+                                    std::vector<double> *fr);
+
+void cross1d_ingenua(size_t n0, size_t nb,
+                                       int jb,
+                                       std::vector<double> const & mu,
+                                       std::vector<double> const & y,
+                                       std::vector<double> *fr);
+#endif
+
 namespace b118 {
 namespace frlap {
 namespace gdm {
-// Definir interface para a função que realizar convolução e correlação cruzada.
-// size_t n_in  tamanho da entrada
-// size_t n_out tamanho da saída
-// ponteiro para o primeiro elemento a ser lido no vetor de entrada
-// ponteiro para o primeiro elemento de mu a ser lido. Serão lidos n_in + n_out - 1 elementos.
-// ponteiro para o primeiro elemento a ser escrito no vetor de saída.
-// bool ou enum para indicar se é convolução ou correlação cruzada.
-// bool ou enum para indicar se é via FFT ou via blas.
-/* void convolve(size_t n_in, 
-                 size_t n_out,
-                 double *in,
-                 double *mu,
-                 double *out,
-                 bool is_conv,
-                 bool is_fft);
-    
-*/
+
 template<
     class Strategy,
     typename = std::enable_if<
@@ -59,18 +67,18 @@ template<
                >
 >
 struct trunc_uniform final : public general_differences_method {
-    trunc_uniform(double ealpha, double h)
-        : general_differences_method(ealpha, h)
+    trunc_uniform(double ealpha, double deltax)
+        : general_differences_method(ealpha, deltax)
     {}
 
     trunc_uniform() : trunc_uniform(0.0, 0.0) {}
 
     Strategy strategy;
 
-    void compute(std::vector<double> const & y      ,
-                std::size_t                 ja     ,
-                std::size_t                 jb     ,
-                std::vector<double>&       frLap_y) override {
+    void compute(std::vector<double> const & y     ,
+                 std::size_t                ja     ,
+                 std::size_t                jb     ,
+                 std::vector<double>&       frLap_y) override {
         if (jb > y.size()-1)
         throw "jb > y.size()";
         if (ja > jb)
@@ -86,33 +94,49 @@ struct trunc_uniform final : public general_differences_method {
         frLap_y.shrink_to_fit();
 
         std::vector<double> mu(nc);
-        strategy.generate_coefficients(ealpha, deltax, mu);
+        strategy.generate_coefficients(ealpha, deltax, mu.data(), mu.size());
 
         {
-            /*
-            std::vector<double> Ba(n0 * na);
-            std::vector<double> Ya(na);
-            for (std::size_t i = 0; i < n0; ++i)
-                for (std::ptrdiff_t j = 0; j < na; ++j)
-                Ba[i*na + j]=mu[ja+i-j];
-            // y = ealpha*A*x + beta*y  com ealpha = 1.0 e beta = 0.0
-            cblas_dgemv(CblasRowMajor,  // Armazenamento por linha
-                CblasNoTrans,   // Não transpor A
-                n0, na,         // Dimensões de A
-                1.0,            // ealpha
-                Ba.data(), // Matriz A
-                na,             // LDA specifies the first dimension of A as declared in the calling (sub) program.
-                y.data(),             // Vetor x
-                1,              // Passo de x
-                0.0,            // beta
-                frLap_y.data(), // Vetor y
-                1);             // Passo de y
-            */
-           // A operaçao acima é equivalente a uma convolução.
-            multiplica_a(n0, na, ja, mu, &frLap_y);
+#ifdef FRLAP_MULTIPLICA_FABIO_BLAS
+        std::cout << "trunc_uniform(): "
+                  << "using multiplica_a()" << std::endl;
+        multiplica_a(n0, na, ja, mu, y, &frLap_y);
+#elif defined(FRLAP_CONVCORR_INGENUA)
+        std::cout << "trunc_uniform(): "
+                  << "conv1d_ingenua()" << std::endl;
+        conv1d_ingenua(n0, na, ja, mu, y, &frLap_y);
+#else
+        std::vector<double> Ba(n0 * na);
+        std::vector<double> Ya(na);
+        for (std::size_t i = 0; i < n0; ++i)
+            for (std::ptrdiff_t j = 0; j < na; ++j)
+            Ba[i*na + j]=mu[ja+i-j];
+        // y = ealpha*A*x + beta*y  com ealpha = 1.0 e beta = 0.0
+        cblas_dgemv(CblasRowMajor,  // Armazenamento por linha
+            CblasNoTrans,   // Não transpor A
+            n0, na,         // Dimensões de A
+            1.0,            // ealpha
+            Ba.data(), // Matriz A
+            na,             // LDA specifies the first dimension of A as declared in the calling (sub) program.
+            y.data(),             // Vetor x
+            1,              // Passo de x
+            0.0,            // beta
+            frLap_y.data(), // Vetor y
+            1);             // Passo de y
+#endif
         }
-            
+
         {
+#if defined(FRLAP_CONVCORR_INGENUA)
+            {
+                std::vector<double> cross_mu_y(n0);
+                std::cout << "trunc_uniform(): "
+                        << "cross1d_ingenua()" << std::endl;
+                cross1d_ingenua(n0, nb, jb, mu, y, &cross_mu_y);
+                for (std::size_t i = 0; i < n0; ++i)
+                    frLap_y.at(i) += cross_mu_y.at(i);
+            }
+#else
         std::vector<double> Bb(n0 * nb);
         for (std::ptrdiff_t i = 0; i < n0; ++i)
             for (std::size_t j = 0; j < nb; ++j)
@@ -122,15 +146,16 @@ struct trunc_uniform final : public general_differences_method {
             CblasNoTrans,   // Não transpor A
             n0, nb,         // Dimensões de A
             1.0,            // ealpha
-            Bb.data(),      // Matriz A
+            Bb.data(), // Matriz A
             na,             // LDA specifies the first dimension of A as declared in the calling (sub) program.
             y.data()+jb+1,  // Vetor x
             1,              // Passo de x
             1.0,            // beta
             frLap_y.data(), // Vetor y
             1);             // Passo de y
+#endif
         }
-        // A operaçao acima é equivalente a uma correlação cruzada.
+
         {
         std::vector<double> yint(n0);
         // 5.1. Assembly of Yint:
@@ -150,77 +175,6 @@ struct trunc_uniform final : public general_differences_method {
 }  // end namespace frlap
 }  // end namespace b118
 
-// double cblas_ddot(OPENBLAS_CONST blasint n,
-//                   OPENBLAS_CONST double *x, OPENBLAS_CONST blasint incx,
-//                   OPENBLAS_CONST double *y, OPENBLAS_CONST blasint incy);
-
-std::vector<double> multiplica(size_t n0, size_t na, int ja, int jb, std::vector<double>& mu, std::vector<double>& y) {
-    std::vector<double> Ba(n0 * na);
-    std::vector<double> Ya(na);
-    for (std::size_t i = 0; i < n0; ++i)
-        for (std::ptrdiff_t j = 0; j < na; ++j)
-            Ba.at(i*na + j) = mu.at(ja + i - j);
-
-    std::vector<double> frLap_y(n0);
-    // y = alpha*A*x + beta*y  com alpha = 1.0 e beta = 0.0
-    cblas_dgemv(
-        CblasRowMajor,   // Armazenamento por linha
-        CblasNoTrans,    // Não transpor A
-        n0, na,          // Dimensões de A
-        1.0,             // alpha
-        Ba.data(),       // Matriz A
-        na,              // LDA specifies the first dimension of A as declared in the calling (sub) program.
-        y.data(),        // Vetor x
-        1,               // Passo de x
-        0.0,             // beta
-        frLap_y.data(),  // Vetor y
-        1);              // Passo de y
-
-    return frLap_y;
-}
-
-// conv1d_naïf
-void multiplica_a(size_t n0, size_t na, int ja,
-                const std::vector<double>& mu,
-                std::vector<double> *fr) {
-
-    //for (std::size_t i = 0; i < n0; ++i)
-    //    for (std::ptrdiff_t j = 0; j < na; ++j)
-    //        Ba[i*na + j] = mu[ja+i-j];
-
-    // frLap_y[i] = produto interno da linha i de Ba com y
-    // a linha i de Ba é dada por mu[ja+i-j] com j variando de 0 a na-1
-
-    // std::vector<double> frLap_y(n0);
-    for (std::size_t i = 0; i < n0; ++i) {
-        (*fr)[i] = cblas_ddot(
-                        na,
-                        mu.data() + ja + i + (-na + 1),
-                        -1,      // incremento em mu = -1
-                        y.data(),
-                        1);
-    }
-    // Aqui tem um gotcha: se o incremento é negativo, a soma começa do final:
-    /*
-         IX = 1
-         IY = 1
-         IF (INCX.LT.0) IX = (-N+1)*INCX + 1
-         IF (INCY.LT.0) IY = (-N+1)*INCY + 1
-         DO I = 1,N
-            DTEMP = DTEMP + DX(IX)*DY(IY)
-            IX = IX + INCX
-            IY = IY + INCY
-         END DO
-      END IF
-    */
-
-    return frLap_y;
-}
-
-
-//
-//  syntatic sugars
-//
 
 namespace b118 {
 namespace frlap {
@@ -264,3 +218,108 @@ namespace gdm {
 }  // end namespace gdm
 }  // end namespace frlap
 }  // end namespace b118
+
+
+#ifdef FRLAP_MULTIPLICA_FABIO_BLAS
+// conv1d_naïf
+void multiplica_a(size_t n0, size_t na, int ja,
+                const std::vector<double>& mu,
+                const std::vector<double>& y,
+                std::vector<double> *fr) {
+
+    //for (std::size_t i = 0; i < n0; ++i)
+    //    for (std::ptrdiff_t j = 0; j < na; ++j)
+    //        Ba[i*na + j] = mu[ja+i-j];
+
+    // frLap_y[i] = produto interno da linha i de Ba com y
+    // a linha i de Ba é dada por mu[ja+i-j] com j variando de 0 a na-1
+
+    // std::vector<double> frLap_y(n0);
+    for (std::size_t i = 0; i < n0; ++i) {
+        (*fr)[i] = cblas_ddot(
+                        na,
+                        mu.data() + ja + i + (-na + 1),
+                        -1,      // incremento em mu = -1
+                        y.data(),
+                        1);
+    }
+    // Aqui tem um gotcha: se o incremento é negativo, a soma começa do final:
+    /*
+         IX = 1
+         IY = 1
+         IF (INCX.LT.0) IX = (-N+1)*INCX + 1
+         IF (INCY.LT.0) IY = (-N+1)*INCY + 1
+         DO I = 1,N
+            DTEMP = DTEMP + DX(IX)*DY(IY)
+            IX = IX + INCX
+            IY = IY + INCY
+         END DO
+      END IF
+    */
+}
+#endif
+
+#ifdef FRLAP_CONVCORR_INGENUA
+    void conv1d_ingenua(size_t n0, size_t na,
+                                       int ja,
+                                       std::vector<double> const & mu,
+                                       std::vector<double> const & y,
+                                       std::vector<double> *fr) {
+
+        // for (std::size_t i = 0; i < n0; ++i)
+        //     for (std::ptrdiff_t j = 0; j < na; ++j)
+        //         Ba[i*na + j] = mu[ja+i-j];
+
+        // conv_y[i] = produto interno da linha i de Ba com y
+        // a linha i de Ba é dada por mu[ja+i-j] com j variando de 0 a na-1
+
+        // std::vector<double> conv_y(n0);
+        for (std::size_t i = 0; i < n0; ++i) {
+            (*fr)[i] = cblas_ddot(
+                            na,
+                            mu.data() + ja + i + (-na + 1),
+                            -1,      // incremento em mu = -1
+                            y.data(),
+                            1);
+        }
+        // Aqui tem um gotcha: se o incremento é negativo, a soma começa
+        // do final:
+        //
+        //     IX = 1
+        //     IY = 1
+        //     IF (INCX.LT.0) IX = (-N+1)*INCX + 1
+        //     IF (INCY.LT.0) IY = (-N+1)*INCY + 1
+        //     DO I = 1,N
+        //         DTEMP = DTEMP + DX(IX)*DY(IY)
+        //         IX = IX + INCX
+        //         IY = IY + INCY
+        //     END DO
+        // END IF
+    }
+
+    void cross1d_ingenua(size_t n0, size_t nb,
+                                       int jb,
+                                       std::vector<double> const & mu,
+                                       std::vector<double> const & y,
+                                       std::vector<double> *fr) {
+
+
+        //  for (std::ptrdiff_t i = 0; i < n0; ++i)
+        //      for (std::size_t j = 0; j < nb; ++j)
+        //          Bb.at(i*nb + j) = mu.at(n0-i+j);
+
+        // cross_y[i] = produto interno da linha i de Bb com y descolado de jb+1
+        // a linha i de Bb é dada por mu[n0-i+j] com j variando de 0 a nb-1
+        // cross_y[i] = cblas_ddot(nb, mu.data() + n0 - i, 1,
+        //                              y.data() + jb + 1, 1);
+
+        for (std::size_t i = 0; i < n0; ++i) {
+            (*fr)[i] = cblas_ddot(
+                            nb,
+                            mu.data() + n0 - i, // - 1,  // + n0 - i,
+                            1,      // incremento em mu = 1
+                            y.data() + jb + 1,
+                            1);
+        }
+    }
+#endif
