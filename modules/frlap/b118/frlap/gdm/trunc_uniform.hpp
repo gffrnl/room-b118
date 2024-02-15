@@ -34,7 +34,23 @@
 namespace b118 {
 namespace frlap {
 namespace gdm {
-
+// Definir interface para a função que realizar convolução e correlação cruzada.
+// size_t n_in  tamanho da entrada
+// size_t n_out tamanho da saída
+// ponteiro para o primeiro elemento a ser lido no vetor de entrada
+// ponteiro para o primeiro elemento de mu a ser lido. Serão lidos n_in + n_out - 1 elementos.
+// ponteiro para o primeiro elemento a ser escrito no vetor de saída.
+// bool ou enum para indicar se é convolução ou correlação cruzada.
+// bool ou enum para indicar se é via FFT ou via blas.
+/* void convolve(size_t n_in, 
+                 size_t n_out,
+                 double *in,
+                 double *mu,
+                 double *out,
+                 bool is_conv,
+                 bool is_fft);
+    
+*/
 template<
     class Strategy,
     typename = std::enable_if<
@@ -70,7 +86,7 @@ struct trunc_uniform final : public general_differences_method {
         frLap_y.shrink_to_fit();
 
         std::vector<double> mu(nc);
-        strategy.generate_coefficients(ealpha, h, mu);
+        strategy.generate_coefficients(ealpha, deltax, mu);
 
         {
             /*
@@ -92,9 +108,10 @@ struct trunc_uniform final : public general_differences_method {
                 frLap_y.data(), // Vetor y
                 1);             // Passo de y
             */
+           // A operaçao acima é equivalente a uma convolução.
             multiplica_a(n0, na, ja, mu, &frLap_y);
         }
-
+            
         {
         std::vector<double> Bb(n0 * nb);
         for (std::ptrdiff_t i = 0; i < n0; ++i)
@@ -105,7 +122,7 @@ struct trunc_uniform final : public general_differences_method {
             CblasNoTrans,   // Não transpor A
             n0, nb,         // Dimensões de A
             1.0,            // ealpha
-            Bb.data(), // Matriz A
+            Bb.data(),      // Matriz A
             na,             // LDA specifies the first dimension of A as declared in the calling (sub) program.
             y.data()+jb+1,  // Vetor x
             1,              // Passo de x
@@ -113,7 +130,7 @@ struct trunc_uniform final : public general_differences_method {
             frLap_y.data(), // Vetor y
             1);             // Passo de y
         }
-
+        // A operaçao acima é equivalente a uma correlação cruzada.
         {
         std::vector<double> yint(n0);
         // 5.1. Assembly of Yint:
