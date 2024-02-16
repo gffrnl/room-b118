@@ -30,32 +30,23 @@
 #include <b118/frlap/gdm.hpp>
 #include <b118/frlap/gdm/strategy.hpp>
 #include <b118/frlap/gdm/strategies/huang_oberman_quadratic.hpp>
+#include <b118/frlap/gdm/convolucao.hpp>
 
-
-#ifdef FRLAP_MULTIPLICA_FABIO_BLAS
-#include <iostream>
-void multiplica_a(size_t n0, size_t na, int ja,
-                const std::vector<double>& mu,
-                const std::vector<double>& y,
-                std::vector<double> *fr);
-#endif
-#ifdef FRLAP_CONVCROSS_INGENUA
 #include <iostream>
 #include <vector>
+#include <algorithm>
 
-void conv1d_ingenua(size_t n0, size_t na,
-                    double const * const mu,
+void conv1d_ingenua(std::size_t output_size, std::size_t input_size,
+                    double const * const kernel,
                     double const * const y,
                     double       * const fr);
 
-void cross1d_ingenua(size_t n0, size_t nb,
-                     double const * const mu,
+void cross1d_ingenua(std::size_t output_size, std::size_t input_size,
+                     double const * const kernel,
                      double const * const y,
                      double       * const fr);
 
 
-
-#endif
 
 namespace b118 {
 namespace frlap {
@@ -97,78 +88,31 @@ struct trunc_uniform final : public general_differences_method {
 
         std::vector<double> mu(nc);
         strategy.generate_coefficients(ealpha, deltax, mu.data(), mu.size());
+        if (false) {
+            conv1d_ingenua(n0, na, mu.data()+ja-na+1, y.data(), frLap_y.data());
 
-        {
-#if  defined(FRLAP_MULTIPLICA_FABIO_BLAS)
-        std::cout << "trunc_uniform(): "
-                  << "using multiplica_a()" << std::endl;
-        multiplica_a(n0, na, ja, mu, y, &frLap_y);
-#elif defined(FRLAP_CONVCROSS_INGENUA)
-        std::cout << "trunc_uniform(): "
-                  << "conv1d_ingenua()" << std::endl;
-        conv1d_ingenua(n0, na, mu.data()+ja, y.data(), frLap_y.data());
-#else
-        std::vector<double> Ba(n0 * na);
-        std::vector<double> Ya(na);
-        for (std::size_t i = 0; i < n0; ++i)
-            for (std::ptrdiff_t j = 0; j < na; ++j)
-            Ba[i*na + j]=mu[ja+i-j];
-        // y = ealpha*A*x + beta*y  com ealpha = 1.0 e beta = 0.0
-        cblas_dgemv(CblasRowMajor,  // Armazenamento por linha
-            CblasNoTrans,   // Não transpor A
-            n0, na,         // Dimensões de A
-            1.0,            // ealpha
-            Ba.data(), // Matriz A
-            na,             // LDA specifies the first dimension of A as declared in the calling (sub) program.
-            y.data(),             // Vetor x
-            1,              // Passo de x
-            0.0,            // beta
-            frLap_y.data(), // Vetor y
-            1);             // Passo de y
-#endif
+            cross1d_ingenua(n0, nb, mu.data() + 1, y.data() + jb + 1,
+                                    frLap_y.data());
+        } else {
+            std::size_t const conv_size = n0 + std::max(na, nb) - 1;
+            convolution conv(conv_size);
+            conv.create_plans(conv_size);
+            conv.conv(n0, na, mu.data()+ja-na+1, y.data(), frLap_y.data(), false);
+            //conv1d_ingenua(n0, na, mu.data()+ja-na+1, y.data(), frLap_y.data());
+
+            conv.conv(n0, nb, mu.data() + 1, y.data() + jb + 1, frLap_y.data(), true);
         }
 
         {
-#if defined(FRLAP_CONVCROSS_INGENUA)
-            {
-                // std::vector<double> cross_mu_y(n0);
-                std::cout << "trunc_uniform(): "
-                        << "cross1d_ingenua()" << std::endl;
-                cross1d_ingenua(n0, nb, mu.data() + 1, y.data() + jb + 1,
-                                frLap_y.data());
-                // for (std::size_t i = 0; i < n0; ++i)
-                //     frLap_y.at(i) += cross_mu_y.at(i);
-            }
-#else
-        std::vector<double> Bb(n0 * nb);
-        for (std::ptrdiff_t i = 0; i < n0; ++i)
-            for (std::size_t j = 0; j < nb; ++j)
-            Bb[i*nb + j]=mu[n0-i+j];
-        // y = ealpha*A*x + beta*y  com ealpha = 1.0 e beta = 1.0
-        cblas_dgemv(CblasRowMajor,  // Armazenamento por linha
-            CblasNoTrans,   // Não transpor A
-            n0, nb,         // Dimensões de A
-            1.0,            // ealpha
-            Bb.data(), // Matriz A
-            na,             // LDA specifies the first dimension of A as declared in the calling (sub) program.
-            y.data()+jb+1,  // Vetor x
-            1,              // Passo de x
-            1.0,            // beta
-            frLap_y.data(), // Vetor y
-            1);             // Passo de y
-#endif
-        }
-
-        {
-        std::vector<double> yint(n0);
-        // 5.1. Assembly of Yint:
-        for (size_t i = 0; i < n0; i++)
-            yint[i] = y[i+ja];
-        std::vector<double> Ayint(n0);
-        // 5.4. Fast symmetric toeplitz-vector A*Yint:
-        fast_symm_toeplitz_prod(n0, mu.data(), yint.data(), Ayint.data());
-        for (std::size_t i = 0; i < n0; i++)
-           frLap_y[i] += Ayint[i];
+            std::vector<double> yint(n0);
+            // 5.1. Assembly of Yint:
+            for (size_t i = 0; i < n0; i++)
+                yint[i] = y[i+ja];
+            std::vector<double> Ayint(n0);
+            // 5.4. Fast symmetric toeplitz-vector A*Yint:
+            fast_symm_toeplitz_prod(n0, mu.data(), yint.data(), Ayint.data());
+            for (std::size_t i = 0; i < n0; i++)
+                frLap_y[i] += Ayint[i];
         }
     }
 };
@@ -222,84 +166,51 @@ namespace gdm {
 }  // end namespace b118
 
 
-#ifdef FRLAP_MULTIPLICA_FABIO_BLAS
-// conv1d_naïf
-void multiplica_a(size_t n0, size_t na, int ja,
-                const std::vector<double>& mu,
-                const std::vector<double>& y,
-                std::vector<double> *fr) {
 
-    //for (std::size_t i = 0; i < n0; ++i)
-    //    for (std::ptrdiff_t j = 0; j < na; ++j)
-    //        Ba[i*na + j] = mu[ja+i-j];
 
-    // frLap_y[i] = produto interno da linha i de Ba com y
-    // a linha i de Ba é dada por mu[ja+i-j] com j variando de 0 a na-1
-
-    // std::vector<double> frLap_y(n0);
-    for (std::size_t i = 0; i < n0; ++i) {
-        (*fr)[i] = cblas_ddot(
-                        na,
-                        mu.data() + ja + i + (-na + 1),
-                        -1,      // incremento em mu = -1
-                        y.data(),
-                        1);
+// Convolution via dot product
+// The output fr satisfies:
+// fr[i] += sum(kernel[input_size - 1 - i + j] * y[j], j = 0 ... input_size - 1), i = 0 .. output_size - 1
+// kernel[k] must be defined in [0, output_size + input_size - 1]
+void conv1d_ingenua(std::size_t output_size, std::size_t input_size,
+                    double const * const kernel,
+                    double const * const y,
+                    double       * const fr) {
+    // Obs: Blas shifts the pointer when INCX < 0:
+    //  ...
+    //     IX = 1
+    //     IY = 1
+    //     IF (INCX.LT.0) IX = (-N+1)*INCX + 1
+    //     IF (INCY.LT.0) IY = (-N+1)*INCY + 1
+    //     DO I = 1,N
+    //         DTEMP = DTEMP + DX(IX)*DY(IY)
+    //         IX = IX + INCX
+    //         IY = IY + INCY
+    //     END DO
+    // ...
+    for (std::size_t i = 0; i < output_size; ++i) {
+        fr[i] += cblas_ddot(input_size,
+                            const_cast<double*>(kernel) + i,
+                            -1,      // increment on kernel = -1
+                            const_cast<double*>(y),
+                            1);
     }
-    // Aqui tem um gotcha: se o incremento é negativo, a soma começa do final:
-    /*
-         IX = 1
-         IY = 1
-         IF (INCX.LT.0) IX = (-N+1)*INCX + 1
-         IF (INCY.LT.0) IY = (-N+1)*INCY + 1
-         DO I = 1,N
-            DTEMP = DTEMP + DX(IX)*DY(IY)
-            IX = IX + INCX
-            IY = IY + INCY
-         END DO
-      END IF
-    */
 }
-#endif
 
-#ifdef FRLAP_CONVCROSS_INGENUA
-    void conv1d_ingenua(size_t n0, size_t na,
-                        double const * const mu,
-                        double const * const y,
-                        double       * const fr) {
-        int const blas_offset = -na + 1;
-        // Compensate shift made by Blas when INCX < 0:
-        //  ...
-        //     IX = 1
-        //     IY = 1
-        //     IF (INCX.LT.0) IX = (-N+1)*INCX + 1
-        //     IF (INCY.LT.0) IY = (-N+1)*INCY + 1
-        //     DO I = 1,N
-        //         DTEMP = DTEMP + DX(IX)*DY(IY)
-        //         IX = IX + INCX
-        //         IY = IY + INCY
-        //     END DO
-        // ...
-        for (std::size_t i = 0; i < n0; ++i) {
-            fr[i] += cblas_ddot(
-                            na,
-                            const_cast<double*>(mu) + i + blas_offset,
-                            -1,      // increment on mu = -1
+
+// Cross-correlation via dot product
+// The output fr satisfies:
+// fr[i] += sum(kernel[output_size - 1 - i + j] * y[j], j = 0 ... input_size - 1), i = 0 .. output_size - 1
+// kernel[k] must be defined in [0, output_size + input_size - 1]
+void cross1d_ingenua(std::size_t output_size, std::size_t input_size,
+                     double const * const kernel,
+                     double const * const y,
+                     double       * const fr) {
+    for (std::size_t i = 0; i < output_size; ++i) {
+        fr[i] += cblas_ddot(input_size,
+                            const_cast<double*>(kernel) + (output_size - 1) - i,
+                            1,      // increment on kernel = 1
                             const_cast<double*>(y),
                             1);
-        }
     }
-
-    void cross1d_ingenua(size_t n0, size_t nb,
-                         double const * const mu,
-                         double const * const y,
-                         double       * const fr) {
-        for (std::size_t i = 0; i < n0; ++i) {
-            fr[i] += cblas_ddot(
-                            nb,
-                            const_cast<double*>(mu) + (n0 - 1) - i,
-                            1,      // increment on mu = 1
-                            const_cast<double*>(y),
-                            1);
-        }
-    }
-#endif
+}

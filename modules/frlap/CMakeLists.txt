@@ -20,6 +20,7 @@ target_sources(b118-frlap
                 # toep.h (TO REMOVE)
                 b118/frlap/detail/toep.h # TODO(gffrnl) to remove
                 b118/frlap/detail/fstp.hpp
+                b118/frlap/gdm/convolucao.hpp
 )
 
 target_sources(b118-frlap
