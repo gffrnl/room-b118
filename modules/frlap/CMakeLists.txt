@@ -40,7 +40,7 @@ target_include_directories(b118-frlap
 target_link_libraries(b118-frlap
     PUBLIC
         b118-base
-    PRIVATE
+    PUBLIC
         ${LIB_OPENBLAS}
         ${LIB_FFTW3}
 )
@@ -67,4 +67,4 @@ install(TARGETS b118-frlap
 )
 
 add_subdirectory(miniapps)
-add_subdirectory(examples)
+#add_subdirectory(examples)
