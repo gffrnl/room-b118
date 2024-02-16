@@ -55,4 +55,4 @@ install(TARGETS b118-base
   INCLUDES DESTINATION ${CMAKE_INSTALL_INCLUDEDIR} # include
 )
 
-add_subdirectory(examples)
+#add_subdirectory(examples)
