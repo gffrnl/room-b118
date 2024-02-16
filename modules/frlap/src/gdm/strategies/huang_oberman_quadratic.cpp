@@ -116,13 +116,13 @@ void huang_oberman_quadratic::generate_coefficients(double      ealpha,
                         -       d0G_alpha_ne_1(ealpha, 1));
 
             for (std::size_t k = 2; k < n; k+=2)
-                coeffs[k] = ch * 2.0 * (d1G_alpha_ne_1(ealpha, k+1)
+                coeffs[k] = ch * 2.0 * (d1G_alpha_ne_1(ealpha, k+1)  // TODO(Fabio) simplificar
                         + d1G_alpha_ne_1(ealpha, k-1)
                         - d0G_alpha_ne_1(ealpha, k+1)
                         + d0G_alpha_ne_1(ealpha, k-1));
 
             for (std::size_t k = 3; k < n; k+=2)
-                coeffs[k] = ch * (- 0.5 * (d1G_alpha_ne_1(ealpha, k+2)
+                coeffs[k] = ch * (- 0.5 * (d1G_alpha_ne_1(ealpha, k+2)  // TODO(Fabio) simplificar
                                         + d1G_alpha_ne_1(ealpha, k-2) )
                                 - 3.0 * d1G_alpha_ne_1(ealpha, k)
                                 +       d0G_alpha_ne_1(ealpha, k+2)
