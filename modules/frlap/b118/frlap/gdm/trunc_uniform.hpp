@@ -24,9 +24,9 @@
 #pragma once
 
 #include <cblas.h>
-#include <b118/frlap/detail/toep.h>
 #include <cassert>
 #include <type_traits>
+#include <b118/frlap/detail/fstp.hpp>
 #include <b118/frlap/gdm.hpp>
 #include <b118/frlap/gdm/strategy.hpp>
 #include <b118/frlap/gdm/strategies/huang_oberman_quadratic.hpp>
@@ -39,7 +39,7 @@ void multiplica_a(size_t n0, size_t na, int ja,
                 const std::vector<double>& y,
                 std::vector<double> *fr);
 #endif
-#ifdef FRLAP_CONVCORR_INGENUA
+#ifdef FRLAP_CONVCROSS_INGENUA
 #include <iostream>
 #include <vector>
 
@@ -99,11 +99,11 @@ struct trunc_uniform final : public general_differences_method {
         strategy.generate_coefficients(ealpha, deltax, mu.data(), mu.size());
 
         {
-#ifdef FRLAP_MULTIPLICA_FABIO_BLAS
+#if  defined(FRLAP_MULTIPLICA_FABIO_BLAS)
         std::cout << "trunc_uniform(): "
                   << "using multiplica_a()" << std::endl;
         multiplica_a(n0, na, ja, mu, y, &frLap_y);
-#elif defined(FRLAP_CONVCORR_INGENUA)
+#elif defined(FRLAP_CONVCROSS_INGENUA)
         std::cout << "trunc_uniform(): "
                   << "conv1d_ingenua()" << std::endl;
         conv1d_ingenua(n0, na, mu.data()+ja, y.data(), frLap_y.data());
@@ -129,7 +129,7 @@ struct trunc_uniform final : public general_differences_method {
         }
 
         {
-#if defined(FRLAP_CONVCORR_INGENUA)
+#if defined(FRLAP_CONVCROSS_INGENUA)
             {
                 // std::vector<double> cross_mu_y(n0);
                 std::cout << "trunc_uniform(): "
@@ -166,10 +166,9 @@ struct trunc_uniform final : public general_differences_method {
             yint[i] = y[i+ja];
         std::vector<double> Ayint(n0);
         // 5.4. Fast symmetric toeplitz-vector A*Yint:
-        int ret = fast_symm_toeplitz_prod(n0, mu.data(), yint.data(), Ayint.data());
-        assert(ret == 0); // TODO: change to an error
+        fast_symm_toeplitz_prod(n0, mu.data(), yint.data(), Ayint.data());
         for (std::size_t i = 0; i < n0; i++)
-            frLap_y[i] += Ayint[i];
+           frLap_y[i] += Ayint[i];
         }
     }
 };
@@ -262,12 +261,11 @@ void multiplica_a(size_t n0, size_t na, int ja,
 }
 #endif
 
-#ifdef FRLAP_CONVCORR_INGENUA
+#ifdef FRLAP_CONVCROSS_INGENUA
     void conv1d_ingenua(size_t n0, size_t na,
                         double const * const mu,
                         double const * const y,
                         double       * const fr) {
-
         int const blas_offset = -na + 1;
         // Compensate shift made by Blas when INCX < 0:
         //  ...
@@ -281,7 +279,6 @@ void multiplica_a(size_t n0, size_t na, int ja,
         //         IY = IY + INCY
         //     END DO
         // ...
-
         for (std::size_t i = 0; i < n0; ++i) {
             fr[i] += cblas_ddot(
                             na,
@@ -296,7 +293,6 @@ void multiplica_a(size_t n0, size_t na, int ja,
                          double const * const mu,
                          double const * const y,
                          double       * const fr) {
-
         for (std::size_t i = 0; i < n0; ++i) {
             fr[i] += cblas_ddot(
                             nb,

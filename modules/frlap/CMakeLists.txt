@@ -18,7 +18,8 @@ target_sources(b118-frlap
                 # strategies
                 b118/frlap/gdm/strategies/huang_oberman_quadratic.hpp
                 # toep.h (TO REMOVE)
-                b118/frlap/detail/toep.h
+                b118/frlap/detail/toep.h # TODO(gffrnl) to remove
+                b118/frlap/detail/fstp.hpp
 )
 
 target_sources(b118-frlap
@@ -28,7 +29,8 @@ target_sources(b118-frlap
         src/gdm/strategies/huang_oberman.cpp
         src/gdm/strategies/huang_oberman_quadratic.cpp
     PRIVATE
-        src/toep.c
+        #src/toep.c
+        src/fstp.cpp
 )
 
 target_include_directories(b118-frlap
