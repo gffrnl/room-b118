@@ -6,6 +6,7 @@ target_sources(b118-base
         FILE_SET b118_base_public_headers
             TYPE HEADERS
             FILES
+                b118/utility.hpp
                 b118/type_traits.hpp
                 b118/numbers.hpp
                 b118/almost_equal.hpp

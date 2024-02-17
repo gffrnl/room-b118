@@ -48,6 +48,8 @@ target_link_libraries(b118-frlap
         ${LIB_FFTW3}
 )
 
+add_dependencies(b118-frlap b118-base)
+
 # Debug Postffix
 if (CMAKE_BUILD_TYPE STREQUAL "Debug")
     set_target_properties(b118-frlap PROPERTIES DEBUG_POSTFIX "d")

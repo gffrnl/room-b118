@@ -8,15 +8,6 @@
 #include <cassert>
 #include <algorithm>
 
-static size_t next_power_of_2(size_t n) {
-    std::size_t x = 1;
-    while (x < n) {
-        x <<= 1;
-    }
-    return x;
-}
-
-
 // The input is y and mu, and the output is frLap_y.
 // mu must have at least na + n0 - 1 elements
 // y must have at least na elements

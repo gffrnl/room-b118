@@ -1,8 +1,8 @@
 /*   libb118
  *
- *   modules/base/src/b118-base.cpp
+ *   modules/base/b118/utility.hpp
  *
- *   TODO(gffrnl) DESCRIPTION OF THIS FILES
+ *   Utilities
  *
  *   Copyright (C) 2024  Guilherme F. Fornel <gffrnl@gmail.com>
  *
@@ -20,14 +20,21 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-// #include <b118/utility.hpp>
+#pragma once
 
-// // TODO(gffrnl,fazedo) DESCRIPTION
-// // TODO(gffrnl,fazedo) BETTER IMPLEMENTATION ??
-// std::size_t b118::next_exp2(std::size_t n) {
-//     std::size_t x = 1;
-//     while (x < n) {
-//         x <<= 1;
-//     }
-//     return x;
-// }
+#include <cstddef>
+
+namespace b118 {
+
+// TODO(gffrnl,fazedo) DESCRIPTION
+// TODO(gffrnl,fazedo) BETTER IMPLEMENTATION ??
+template<typename Unsigned>
+Unsigned next_exp2(Unsigned n) {
+    Unsigned x = 1;
+    while (x < n) {
+        x <<= 1;
+    }
+    return x;
+}
+
+}  // end namespace b118
