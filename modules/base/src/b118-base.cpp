@@ -20,14 +20,14 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <b118/utility.hpp>
+// #include <b118/utility.hpp>
 
-// TODO(gffrnl,fazedo) DESCRIPTION
-// TODO(gffrnl,fazedo) BETTER IMPLEMENTATION ??
-std::size_t b118::next_exp2(std::size_t n) {
-    std::size_t x = 1;
-    while (x < n) {
-        x <<= 1;
-    }
-    return x;
-}
+// // TODO(gffrnl,fazedo) DESCRIPTION
+// // TODO(gffrnl,fazedo) BETTER IMPLEMENTATION ??
+// std::size_t b118::next_exp2(std::size_t n) {
+//     std::size_t x = 1;
+//     while (x < n) {
+//         x <<= 1;
+//     }
+//     return x;
+// }

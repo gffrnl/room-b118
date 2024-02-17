@@ -26,6 +26,15 @@
 
 namespace b118 {
 
-std::size_t next_exp2(std::size_t n);
+// TODO(gffrnl,fazedo) DESCRIPTION
+// TODO(gffrnl,fazedo) BETTER IMPLEMENTATION ??
+template<typename Unsigned>
+Unsigned next_exp2(Unsigned n) {
+    Unsigned x = 1;
+    while (x < n) {
+        x <<= 1;
+    }
+    return x;
+}
 
 }  // end namespace b118
