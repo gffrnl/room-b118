@@ -1,7 +1,6 @@
 // Copyright 2024 Guilherme F. Fornel
 
 #include <stdio.h>
-#include <stddef.h>
 #include <stdint.h>
 #include <float.h>
 
@@ -11,6 +10,7 @@
 #include <cstdlib>
 #include <cstring>
 #include <cmath>
+#include <b118/utility.hpp>
 
 void fast_symm_toeplitz_prod(std::size_t const                      n,
                              double      const * const __restrict__ A1,
@@ -26,8 +26,8 @@ void fast_symm_toeplitz_prod(std::size_t const                      n,
 
     fftw_plan plan;
 
-    /* The sizes needed to allocate memory for the
-        augmented arrays */
+    // The sizes needed to allocate memory for the
+    //    augmented arrays
     k = (n % 2 == 0) ? (n - 4) / 2 : (n - 3) / 2;
     m = n + 2 * (k + 1);
 
@@ -57,23 +57,22 @@ void fast_symm_toeplitz_prod(std::size_t const                      n,
     //
     // ...
     //
+    std::size_t const m2 = b118::next_exp2(m) - 1;
 
-    mu  = static_cast<double *>(fftw_malloc(sizeof(double) * m));
-    y   = static_cast<double *>(fftw_malloc(sizeof(double) * m));
-    aux = static_cast<double *>(fftw_malloc(sizeof(double) * m));
+    // mu  = static_cast<double *>(fftw_malloc(sizeof(double) * m));
+    // y   = static_cast<double *>(fftw_malloc(sizeof(double) * m));
+    // aux = static_cast<double *>(fftw_malloc(sizeof(double) * m));
+
+    mu  = static_cast<double *>(fftw_malloc(sizeof(double) * m2));
+    y   = static_cast<double *>(fftw_malloc(sizeof(double) * m2));
+    aux = static_cast<double *>(fftw_malloc(sizeof(double) * m2));
 
     // // TODO(gffrnl): replace for AFTER memsets
-    // std::memset((void *)  mu, 0, m * sizeof(double));
-    // std::memset((void *)   y, 0, m * sizeof(double));
-    std::memset(static_cast<void *>(mu),
-                0,
-                (m - n) * sizeof(double));
-    std::memset(static_cast<void *>(y),
-                0,
-                m * sizeof(double));
-    std::memset(static_cast<void *>(aux),
-                0,
-                m * sizeof(double));
+    // std::memset(static_cast<void *>(mu), 0, m * sizeof(double));
+    // std::memset(static_cast<void *>(y), 0, m * sizeof(double));
+    // std::memset(static_cast<void *>(mu), 0, m2 * sizeof(double));
+    // std::memset(static_cast<void *>(y), 0, m2 * sizeof(double));
+
 
     // Construct of the the augmented arrays
     std::memcpy(static_cast<void *>(mu),    static_cast<void const *>(A1),
@@ -84,15 +83,24 @@ void fast_symm_toeplitz_prod(std::size_t const                      n,
                 n * sizeof(double));
 
     // TODO(gffrnl): replacement for the BEFORE memsets
+    // std::memset(static_cast<void *>(mu + n),
+    //             0,
+    //             (m - n) * sizeof(double));
+    // std::memset(static_cast<void *>(y),
+    //             0,
+    //             (k + 1) * sizeof(double));
+    // std::memset(static_cast<void *>(y + k + 1 + n),
+    //             0,
+    //             (k + 1) * sizeof(double));
     std::memset(static_cast<void *>(mu + n),
                 0,
-                (m - n) * sizeof(double));
+                (m2 - n) * sizeof(double));
     std::memset(static_cast<void *>(y),
                 0,
                 (k + 1) * sizeof(double));
     std::memset(static_cast<void *>(y + k + 1 + n),
                 0,
-                (k + 1) * sizeof(double));
+                (m2 - (k + 1 + n)) * sizeof(double));
 
     // Compute the DST1 of mu and store in aux
     plan = fftw_plan_r2r_1d(m, mu, aux, FFTW_RODFT00, FFTW_ESTIMATE);
@@ -107,7 +115,9 @@ void fast_symm_toeplitz_prod(std::size_t const                      n,
     {
         double const scaling = 1.0 / (4.0 * (m + 1));
         double const delta_theta = M_PI / (m + 1);
-        for (std::size_t i = 0; i < m; ++i)
+        // for (std::size_t i = 0; i < m; ++i)
+        //     aux[i] *= (scaling * mu[i] / sin((i + 1) * delta_theta));
+        for (std::size_t i = 0; i < m2; ++i)
             aux[i] *= (scaling * mu[i] / sin((i + 1) * delta_theta));
     }
     // NOTE: TODO(grffrnl) REWRITE THIS NOTE
@@ -122,6 +132,8 @@ void fast_symm_toeplitz_prod(std::size_t const                      n,
     fftw_free(aux);
 
     // Copy only necessary values to b
+    // std::memcpy(static_cast<void *>(b), static_cast<void const *>(mu + k + 1),
+    //             n * sizeof(double));
     std::memcpy(static_cast<void *>(b), static_cast<void const *>(mu + k + 1),
                 n * sizeof(double));
 
