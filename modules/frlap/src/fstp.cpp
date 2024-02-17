@@ -84,7 +84,7 @@ void fast_symm_toeplitz_prod(std::size_t const                      n,
                 (m2 - (k + 1 + n)) * sizeof(double));
 
     // Compute the DST1 of mu and store in aux
-    plan = fftw_plan_r2r_1d(m, mu, aux, FFTW_RODFT00, FFTW_ESTIMATE);
+    plan = fftw_plan_r2r_1d(m2, mu, aux, FFTW_RODFT00, FFTW_ESTIMATE);
     fftw_execute_r2r(plan, mu, aux);
 
     // Compute the DST1 of y and store in mu
@@ -94,8 +94,8 @@ void fast_symm_toeplitz_prod(std::size_t const                      n,
 
     // Multiply
     {
-        double const scaling = 1.0 / (4.0 * (m + 1));
-        double const delta_theta = M_PI / (m + 1);
+        double const scaling = 1.0 / (4.0 * (m2 + 1));
+        double const delta_theta = M_PI / (m2 + 1);
         for (std::size_t i = 0; i < m2; ++i)
             aux[i] *= (scaling * mu[i] / sin((i + 1) * delta_theta));
     }
