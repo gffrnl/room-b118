@@ -33,6 +33,7 @@ void fast_symm_toeplitz_prod(std::size_t const                      n,
 
     // https://www.fftw.org/fftw3_doc/
     //
+    //
     // 4.3.5 Real-to-Real Transforms
     //
     // ...
@@ -59,20 +60,9 @@ void fast_symm_toeplitz_prod(std::size_t const                      n,
     //
     std::size_t const m2 = b118::next_exp2(m) - 1;
 
-    // mu  = static_cast<double *>(fftw_malloc(sizeof(double) * m));
-    // y   = static_cast<double *>(fftw_malloc(sizeof(double) * m));
-    // aux = static_cast<double *>(fftw_malloc(sizeof(double) * m));
-
     mu  = static_cast<double *>(fftw_malloc(sizeof(double) * m2));
     y   = static_cast<double *>(fftw_malloc(sizeof(double) * m2));
     aux = static_cast<double *>(fftw_malloc(sizeof(double) * m2));
-
-    // // TODO(gffrnl): replace for AFTER memsets
-    // std::memset(static_cast<void *>(mu), 0, m * sizeof(double));
-    // std::memset(static_cast<void *>(y), 0, m * sizeof(double));
-    // std::memset(static_cast<void *>(mu), 0, m2 * sizeof(double));
-    // std::memset(static_cast<void *>(y), 0, m2 * sizeof(double));
-
 
     // Construct of the the augmented arrays
     std::memcpy(static_cast<void *>(mu),    static_cast<void const *>(A1),
@@ -82,16 +72,7 @@ void fast_symm_toeplitz_prod(std::size_t const                      n,
     std::memcpy(static_cast<void *>(y + k + 1), static_cast<void const *>(x),
                 n * sizeof(double));
 
-    // TODO(gffrnl): replacement for the BEFORE memsets
-    // std::memset(static_cast<void *>(mu + n),
-    //             0,
-    //             (m - n) * sizeof(double));
-    // std::memset(static_cast<void *>(y),
-    //             0,
-    //             (k + 1) * sizeof(double));
-    // std::memset(static_cast<void *>(y + k + 1 + n),
-    //             0,
-    //             (k + 1) * sizeof(double));
+    // Populate with 0 the rest of
     std::memset(static_cast<void *>(mu + n),
                 0,
                 (m2 - n) * sizeof(double));
@@ -115,8 +96,6 @@ void fast_symm_toeplitz_prod(std::size_t const                      n,
     {
         double const scaling = 1.0 / (4.0 * (m + 1));
         double const delta_theta = M_PI / (m + 1);
-        // for (std::size_t i = 0; i < m; ++i)
-        //     aux[i] *= (scaling * mu[i] / sin((i + 1) * delta_theta));
         for (std::size_t i = 0; i < m2; ++i)
             aux[i] *= (scaling * mu[i] / sin((i + 1) * delta_theta));
     }
@@ -132,8 +111,6 @@ void fast_symm_toeplitz_prod(std::size_t const                      n,
     fftw_free(aux);
 
     // Copy only necessary values to b
-    // std::memcpy(static_cast<void *>(b), static_cast<void const *>(mu + k + 1),
-    //             n * sizeof(double));
     std::memcpy(static_cast<void *>(b), static_cast<void const *>(mu + k + 1),
                 n * sizeof(double));
 
