@@ -40,12 +40,14 @@ int main(int argc, char * argv[]) {
   int refino_da_malha = argc > 3? std::atoi(argv[3]) : 1;
 
   if (!(tipo_coefficientes == "gormai") &&
-      !(tipo_coefficientes == "huob1") &&
-      !(tipo_coefficientes == "huob2")) {
+      !(tipo_coefficientes == "huob1")  &&
+      !(tipo_coefficientes == "huob2")  &&
+      !(tipo_coefficientes == "c3point")) {
     cerr << "primeiro argumento deve ser:\n"
-            "  `gormai`: coeficientes de Gorenflo & Mainardi\n"
-            "  `huob1` : coeficientes de Huang & Oberman linear\n"
-            "  `huob2` : coeficientes de Huang & Oberman quadratico"
+            "  `gormai` : coeficientes de Gorenflo & Mainardi\n"
+            "  `huob1`  : coeficientes de Huang & Oberman linear\n"
+            "  `huob2`  : coeficientes de Huang & Oberman quadratico\n"
+            "  `c3point`: coeficientes da periodizacao da regra de 3 pontos"
          << endl;
     return EXIT_FAILURE;
   }
@@ -64,6 +66,8 @@ int main(int argc, char * argv[]) {
     cout << "[using huang_oberman_linear]" << endl;
   } else if (tipo_coefficientes == "huob2") {
     cout << "[using huang_oberman_quadratico]" << endl;
+  } else if (tipo_coefficientes == "c3point") {
+    cout << "[using centered_3_point_periodized]" << endl;
   } else {
     cerr << "primeiro argumento invalido. abortando..." << endl;
     abort();
@@ -134,6 +138,12 @@ int main(int argc, char * argv[]) {
     tempo_3 = std::chrono::high_resolution_clock::now();
   } else if (tipo_coefficientes == "huob2") {
     b118::frlap::gdm::trunc_uniform_huob2 method(ealpha, deltax);
+    tempo_2 = std::chrono::high_resolution_clock::now();
+    method.compute(fnyvals, ja, jb, FLY0);
+    tempo_3 = std::chrono::high_resolution_clock::now();
+  } else if (tipo_coefficientes == "c3point") {
+    cout << "[using centered_3_point_periodized]" << endl;
+    b118::frlap::gdm::trunc_uniform_c3point method(ealpha, deltax);
     tempo_2 = std::chrono::high_resolution_clock::now();
     method.compute(fnyvals, ja, jb, FLY0);
     tempo_3 = std::chrono::high_resolution_clock::now();

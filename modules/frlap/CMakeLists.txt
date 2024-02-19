@@ -19,6 +19,7 @@ target_sources(b118-frlap
                 b118/frlap/gdm/strategies/gorenflo_mainardi.hpp
                 b118/frlap/gdm/strategies/huang_oberman_linear.hpp
                 b118/frlap/gdm/strategies/huang_oberman_quadratic.hpp
+                b118/frlap/gdm/strategies/centered_3_point_periodized.hpp
                 # toep.h (TO REMOVE)
                 b118/frlap/detail/toep.h # TODO(gffrnl) to remove
                 b118/frlap/detail/fstp.hpp
@@ -33,6 +34,7 @@ target_sources(b118-frlap
         src/gdm/strategies/huang_oberman.cpp
         src/gdm/strategies/huang_oberman_linear.cpp
         src/gdm/strategies/huang_oberman_quadratic.cpp
+        src/gdm/strategies/centered_3_point_periodized.cpp
     PRIVATE
         #src/toep.c
         src/fstp.cpp

@@ -32,6 +32,7 @@
 #include <b118/frlap/gdm/strategies/gorenflo_mainardi.hpp>
 #include <b118/frlap/gdm/strategies/huang_oberman_linear.hpp>
 #include <b118/frlap/gdm/strategies/huang_oberman_quadratic.hpp>
+#include <b118/frlap/gdm/strategies/centered_3_point_periodized.hpp>
 #include <b118/frlap/gdm/convolucao.hpp>
 
 #include <iostream>
@@ -153,9 +154,8 @@ namespace gdm {
   using trunc_uniform_huob2 =
     trunc_uniform<strategies::huang_oberman_quadratic>;
 
-//   typedef trunc_uniform<
-//     strategies::centered_3_point_periodized
-//   > trunc_uniform_3point;
+  using trunc_uniform_c3point =
+    trunc_uniform<strategies::centered_3_point_periodized>;
 
 }  // end namespace gdm
 }  // end namespace frlap
