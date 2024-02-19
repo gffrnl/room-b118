@@ -29,6 +29,8 @@
 #include <b118/frlap/detail/fstp.hpp>
 #include <b118/frlap/gdm.hpp>
 #include <b118/frlap/gdm/strategy.hpp>
+#include <b118/frlap/gdm/strategies/spectral_qawo.hpp>
+#include <b118/frlap/gdm/strategies/spectral_tanh_sinh.hpp>
 #include <b118/frlap/gdm/strategies/gorenflo_mainardi.hpp>
 #include <b118/frlap/gdm/strategies/huang_oberman_linear.hpp>
 #include <b118/frlap/gdm/strategies/huang_oberman_quadratic.hpp>
@@ -129,21 +131,11 @@ namespace b118 {
 namespace frlap {
 namespace gdm {
 
-//   typedef trunc_uniform<
-//     strategies::spectral
-//   > trunc_uniform_spec;
+  using trunc_uniform_spec_qawo =
+    trunc_uniform<strategies::spectral_qawo>;
 
-//   typedef trunc_uniform<
-//     strategies::spectral_ooura
-//   > trunc_uniform_spec_ooura;
-
-//   typedef trunc_uniform<
-//     strategies::spectral_qawo
-//   > trunc_uniform_spec_qawo;
-
-//   typedef trunc_uniform<
-//     strategies::spectral_tanh_sinh
-//   > trunc_uniform_spec_thsh;
+  using trunc_uniform_spec_thsh =
+    trunc_uniform<strategies::spectral_tanh_sinh>;
 
   using trunc_uniform_gormai =
     trunc_uniform<strategies::gorenflo_mainardi>;
