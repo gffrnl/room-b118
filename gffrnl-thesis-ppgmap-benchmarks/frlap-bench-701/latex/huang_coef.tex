@@ -14,19 +14,24 @@ Vamos trabalhar os cancelamentos na seguinte expressão, que apresenta cancelame
 
 Além disso a série bionomial no dá a assintótica:
 \begin{eqnarray*}
-    (1+x)^{1-\alpha} + (1-x)^{1-\alpha} &\sim& 2 + 2\frac{(1-\alpha)(-\alpha)}{2}x^2 + 2\frac{(1-\alpha)(-\alpha)(-1-\alpha)(-2-\alpha)}{4!} + \cdots\\
-    &=& 2+ \alpha(\alpha-1)x^2\left[1 + \frac{(1+\alpha)(2+\alpha)}{12}x^2\right]
+    (1+x)^{1-\alpha} + (1-x)^{1-\alpha} &=& 2 + (\alpha - 1) \alpha x^2 + \frac{(\alpha - 1) \alpha (\alpha + 1) (\alpha + 2)}{4!/2} x^4\\ &+& \frac{(\alpha - 1) \alpha (\alpha + 1) (\alpha + 2) (\alpha + 3) (\alpha + 4)}{6!/2} x^6 +\cdots
 \end{eqnarray*}
 
 Definindo $x=1/k$, temos:
 
 \begin{eqnarray*}
-    |1+1/k|^{1-\alpha} + |1-1/k|^{1-\alpha}-2 &\sim&\alpha(\alpha-1)k^{-2}\left[1 + \frac{(1+\alpha)(2+\alpha)}{12}k^{-2}\right]
+    G'(k+1) - 2G'(k) + G'(k-1) &\sim& -|k|^{-\alpha-1}\left[1 + \frac{(1+\alpha)(2+\alpha)}{12}|k|^{-2}+ \cdots \right]
 \end{eqnarray*}
-Portanto:
+
+$$E = |k|^{-\alpha-1}\sum_{k=2}^\infty a_n (\alpha+ 3)\cdots (\alpha + n -2)x^n$$ 
+onde $a_n = 0$ se n é ímpar e $a_n = \frac{2}{n!}$ se n é par.
+
+\section{Caso linear, k =1}
 \begin{eqnarray*}
-    G'(k+1) - 2G'(k) + G'(k-1) &\sim&- |k|^{-\alpha-1}\left[1 + \frac{(1+\alpha)(2+\alpha)}{12}|k|^{-2}+ \cdots \right]
+    \frac{1}{2-\alpha}-G''(1) + G'(2) - G'(1) &=&\frac{1}{2-\alpha}+\frac{1}{\alpha} + \frac{2^{1-\alpha}-1}{\alpha(\alpha-1)}\\
+    &=&\frac{1}{2-\alpha}+\frac{1}{\alpha} + \frac{e^{\ln(2)(1-\alpha)}-1}{\alpha(\alpha-1)}\\
 \end{eqnarray*}
+
 
 \newpage
 \section{Quadrático - Termos pares e alpha != 1}
@@ -196,5 +201,26 @@ E
 $$E=\sum_{n=2}^\infty a_n (2x)^n$$
 
 $$a_n=\frac{3}{n}-\frac{4}{n+1} = \frac{3-n}{n+1}  , ~~\text{n par}$$
+
+\newpage
+\section{Integral numérica}
+\begin{eqnarray*}
+    I&:=&\int_0^\pi x^{\alpha}\cos(kx)dx =\sum_{n=0}^{k-1}\int_{n\theta}^{(n+1)\theta} x^{\alpha}\cos(kx)dx\\
+      &=&\sum_{n=0}^{k-1}\int_{0}^{\theta} (x+n\theta)^{\alpha}\cos(kx + n\pi)dx\\
+      &=&\sum_{n=0}^{k-1}(-1)^k\int_{0}^{\theta} (x+n\theta)^{\alpha}\cos(kx)dx\\
+      &=&\sum_{n=0}^{k-1}(-1)^k\left[\int_{0}^{\theta/2} (x+n\theta)^{\alpha}\cos(kx)dx+ \int_{\theta/2}^{\theta} (x+n\theta)^{\alpha}\cos(kx)dx\right]\\
+\end{eqnarray*}
+onde $\theta = \frac{\pi}{k}$.
+Na segunda integral, faça a mudança de variável $y= \theta - x$:
+\begin{eqnarray*}
+    \int_{\theta/2}^{0} (-y+(n+1)\theta)^{\alpha}\cos(-ky+\pi)(-dy) &=& -\int_0^{\theta/2} (-y+(n+1)\theta)^{\alpha}\cos(ky)dy
+\end{eqnarray*}
+Portanto:
+\begin{eqnarray*}
+    I&:=&\sum_{n=0}^{k-1}(-1)^k\int_{0}^{\theta/2}\left[ (x+n\theta)^{\alpha} - (-x + (n+1)\theta)^{\alpha}\right]\cos(kx)dx\\
+    &:=& \sum_{n=0}^{k-1}(-1)^k\int_{0}^{\theta/2}\left[ (x+n\theta)^{\alpha} - (-x + (n+1)\theta)^{\alpha}\right]\cos(kx)dx
+\end{eqnarray*}
+
+
 \end{document}
 

@@ -37,6 +37,36 @@ extern double d2G_alpha_eq_1(std::size_t);
 
 using b118::frlap::gdm::strategies::huang_oberman_linear;
 
+
+template <typename Real>
+Real series(int k, Real alpha) {
+  Real inv_k = 1/static_cast<Real>(k);
+  Real x = inv_k*inv_k;
+  Real prod = 1/static_cast<Real>(2);
+  Real sum = 0;
+  for (int n = 4 ; n < 300; n += 2) {
+      prod *= x*(alpha - 3 + n)*(alpha - 2 + n)/(n * (n - 1));
+          auto old_sum = sum;
+      sum = old_sum + prod;
+      if (sum == old_sum) {
+          break;
+      }
+  }
+  return (1 + 2*sum);
+}  // Asymptotics = 1 as k -> infinity
+
+
+// The following function calculates the first coefficient
+// for alpha != 1. Though it is not defined for alpha = 1,
+// its limit as alpha -> 1 is 2 - log(2).
+template <typename Real>
+Real coeff_k_1(Real alpha) {
+  Real l2 = std::log(static_cast<Real>(2));
+  Real T_1 = std::expm1(l2*(1 - alpha))/(alpha - 1);
+  return 1/(2 - alpha) + (1 + T_1)/alpha;
+}
+
+
 void huang_oberman_linear::generate_coefficients(double      ealpha,
                                                  double      deltax,
                                                  double*     coeffs,
@@ -79,26 +109,11 @@ void huang_oberman_linear::generate_coefficients(double      ealpha,
                    * std::exp(std::lgamma(0.5 + 0.5 * ealpha)
                             - std::lgamma(2.0 - 0.5 * ealpha));
 
-    double const ca_ch = ca * ch;
+    coeffs[1] = is_ealpha_one ? ca * ch * (2.0 - std::log(2.0))
+                              : ca * ch * coeff_k_1(ealpha);
 
-    if (is_ealpha_one == true) {  // Could test only ealpha == 1
-      coeffs[1] =   ca_ch * (1.0 - d2G_alpha_eq_1(1)
-                                 + d1G_alpha_eq_1(2)
-                                 - d1G_alpha_eq_1(1));
-
-      for (std::size_t k = 2; k < n; ++k)
-        coeffs[k] = ca_ch * (        d1G_alpha_eq_1(k + 1)  // NOLINT
-                             - 2.0 * d1G_alpha_eq_1(k)
-                             +       d1G_alpha_eq_1(k - 1));
-    } else {
-      coeffs[1] =   ca_ch * (1.0 / (2.0 - ealpha) - d2G_alpha_ne_1(ealpha, 1)
-                                                  + d1G_alpha_ne_1(ealpha, 2)
-                                                  - d1G_alpha_ne_1(ealpha, 1));
-
-      for (std::size_t k = 2; k < n; ++k)
-        coeffs[k] = ca_ch * (        d1G_alpha_ne_1(ealpha, k+1)  // NOLINT
-                             - 2.0 * d1G_alpha_ne_1(ealpha, k)
-                             +       d1G_alpha_ne_1(ealpha, k-1));
+    for (std::size_t k = 2; k < n; ++k) {
+      coeffs[k] = ca * std::pow(k*deltax, -ealpha) * series(k, ealpha) / k;
     }
   }
 }
