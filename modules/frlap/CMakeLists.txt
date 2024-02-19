@@ -16,6 +16,7 @@ target_sources(b118-frlap
                 b118/frlap/gdm/strategy.hpp
                 b118/frlap/gdm/trunc_uniform.hpp
                 # strategies
+                b118/frlap/gdm/strategies/huang_oberman_linear.hpp
                 b118/frlap/gdm/strategies/huang_oberman_quadratic.hpp
                 # toep.h (TO REMOVE)
                 b118/frlap/detail/toep.h # TODO(gffrnl) to remove
@@ -28,6 +29,7 @@ target_sources(b118-frlap
         src/b118-frlap.cpp
         # strategies
         src/gdm/strategies/huang_oberman.cpp
+        src/gdm/strategies/huang_oberman_linear.cpp
         src/gdm/strategies/huang_oberman_quadratic.cpp
     PRIVATE
         #src/toep.c

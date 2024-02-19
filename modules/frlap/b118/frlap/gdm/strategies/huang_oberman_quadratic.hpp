@@ -1,6 +1,6 @@
 /*   libb118
  *
- *   modules/frlap/b118/frlap/gdm/strategies/huang_oberman_quadratic.hpp
+ *   modules/frlap/b118/frlap/gdm/strategies/huang_oberman_linear.hpp
  *   
  *   Huang & Oberman Quadratic strategy
  *

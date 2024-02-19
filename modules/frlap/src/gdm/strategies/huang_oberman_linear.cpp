@@ -1,9 +1,11 @@
-/*   libfrlap
+/*   libb118
  *
- *   src/gdm/strategies/huan_oberman_linear.cpp
- *     Huang & Oberman Linear strategy
+ *   modules/frlap/src/gdm/strategies/huang_oberman_linear.cpp
+ *   
+ *   Huang & Oberman linear strategy
  *
- *   Copyright (C) 2023  Guilherme F. Fornel <gffrnl@gmail.com>
+ *   Copyright (C) 2024   Guilherme F. Fornel        <gffrnl@gmail.com>
+ *                        Fabio Souto de Azevedo     <fazedo@gmail.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -19,74 +21,51 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <frlap.hpp>
-#include <frlap/gdm/strategies/huang_oberman_linear.hpp>
 #include <cstddef>
 #include <cmath>
 #include <algorithm>
 #include <cfloat>
-
-#ifndef M_1_SQRTPI
-#define M_1_SQRTPI 0.564189583547756286948079451561
-#endif
-
-static bool almosteq(double a, double b)
-{
-  double p = std::fabs(a + b);
-  double m = std::fabs(a - b);
-
-  if ( p < DBL_EPSILON )
-    return true;
-
-  return ( m < (DBL_EPSILON * p) );
-}
+#include <b118/almost_equal.hpp>
+#include <b118/numbers.hpp>
+#include <b118/frlap.hpp>
+#include <b118/frlap/gdm/strategies/huang_oberman_linear.hpp>
 
 extern double d1G_alpha_ne_1(double, std::size_t);
 extern double d2G_alpha_ne_1(double, std::size_t);
 extern double d1G_alpha_eq_1(std::size_t);
 extern double d2G_alpha_eq_1(std::size_t);
 
-void
-frlap::gdm::strategies::huang_oberman_linear::
-generate_coefficients(double                ealpha,
-		      double                deltax,
-		      std::vector<double> & coeffs) const
-{
-  const std::size_t n = coeffs.size();
+using b118::frlap::gdm::strategies::huang_oberman_linear;
 
-  { // treat the boundary cases alpha = 0 and alpha = 2
-    if (almosteq(ealpha, 0.0))
-      {
-	coeffs[0] = 1.0;
-	std::fill(coeffs.begin() + 1, coeffs.end(), 0.0);
-	return;
-      }
+void huang_oberman_linear::generate_coefficients(double      ealpha,
+                                                 double      deltax,
+                                                 double*     coeffs,
+                                                 std::size_t n) const {
+  double constexpr inv_sqrtpi = b118::numbers::inv_sqrtpi_v<double>;
 
-    if (almosteq(ealpha, 2.0))
-      {
-	coeffs[0] =  2.0 / (deltax * deltax);
-	coeffs[1] = -1.0 / (deltax * deltax);
-	std::fill(coeffs.begin() + 2, coeffs.end(), 0.0);
-	return;
-      }
+  {  // Treat the boundary cases ealpha = 0 and ealpha = 2
+    if (b118::almost_equal(ealpha, 0.0)) {
+        coeffs[0] = 1.0;
+        std::fill(coeffs + 1, coeffs + n, 0.0);
+        return;
+    }
+
+    if (b118::almost_equal(ealpha, 2.0)) {
+        coeffs[0] =  2.0 / (deltax * deltax);
+        coeffs[1] = -1.0 / (deltax * deltax);
+        std::fill(coeffs + 2, coeffs + n, 0.0);
+        return;
+    }
   }
 
-  { // {0 < alpha < 2}
+  {  // Now we treat the general case 0 < ealpha < 2
+    bool const is_ealpha_one = b118::almost_equal(ealpha, 1.0);
 
-    double ca = 0.0;
-    double ch = 0.0;
-    
-    if (almosteq(ealpha, 1.0))
-      {
-        ca = - frlap::normal_const<1>(1.0);
-        ch = 1.0 / deltax;
-      }
-    else
-      {
-        ca = - frlap::normal_const<1>(ealpha);
-        ch = std::pow(deltax, -ealpha);
-      }
-    
+    double const ca = is_ealpha_one ? - frlap::normal_const<1>(1.0)
+                                    : - frlap::normal_const<1>(ealpha);
+
+    double const ch = is_ealpha_one ? + 1.0 / deltax
+                                    : + std::pow(deltax, -ealpha);
 
     // REMARK: using Log-Gamma function and then
     //         exponentiate seems better to mitigate
@@ -96,32 +75,30 @@ generate_coefficients(double                ealpha,
     //         do this because the arguments of
     //         our Gammas are always positive.
     //
-    coeffs[0] = ch * M_1_SQRTPI * std::exp2(ealpha) *
-      exp(  std::lgamma(0.5 * (ealpha + 1.0))
-	  - std::lgamma(2.0 -  0.5 *ealpha ) );
+    coeffs[0] = ch * inv_sqrtpi * std::exp2(ealpha)
+                   * std::exp(std::lgamma(0.5 + 0.5 * ealpha)
+                            - std::lgamma(2.0 - 0.5 * ealpha));
 
-    ch *= ca;
-    if (almosteq(ealpha, 1.0))
-      {
-        coeffs[1] = ch * (  1.0
-			  - d2G_alpha_eq_1(1)
-			  + d1G_alpha_eq_1(2)
-			  - d1G_alpha_eq_1(1) );
-        for (std::size_t k = 2; k < n; ++k)
-          coeffs[k] = ch * (        d1G_alpha_eq_1(k+1)
-			    - 2.0 * d1G_alpha_eq_1(k  )
-			    +       d1G_alpha_eq_1(k-1) );
-      }
-    else
-      {
-        coeffs[1] = ch * (  1.0 / (2.0 - ealpha)
-			  - d2G_alpha_ne_1(ealpha, 1)
-			  + d1G_alpha_ne_1(ealpha, 2)
-			  - d1G_alpha_ne_1(ealpha, 1) );
-        for (std::size_t k = 2; k < n; ++k)
-          coeffs[k] = ch * (        d1G_alpha_ne_1(ealpha, k+1)
-			    - 2.0 * d1G_alpha_ne_1(ealpha, k  )
-			    +       d1G_alpha_ne_1(ealpha, k-1) );
-      }
+    double const ca_ch = ca * ch;
+
+    if (is_ealpha_one == true) {  // Could test only ealpha == 1
+      coeffs[1] =   ca_ch * (1.0 - d2G_alpha_eq_1(1)
+                                 + d1G_alpha_eq_1(2)
+                                 - d1G_alpha_eq_1(1));
+
+      for (std::size_t k = 2; k < n; ++k)
+        coeffs[k] = ca_ch * (        d1G_alpha_eq_1(k + 1)  // NOLINT
+                             - 2.0 * d1G_alpha_eq_1(k)
+                             +       d1G_alpha_eq_1(k - 1));
+    } else {
+      coeffs[1] =   ca_ch * (1.0 / (2.0 - ealpha) - d2G_alpha_ne_1(ealpha, 1)
+                                                  + d1G_alpha_ne_1(ealpha, 2)
+                                                  - d1G_alpha_ne_1(ealpha, 1));
+
+      for (std::size_t k = 2; k < n; ++k)
+        coeffs[k] = ca_ch * (        d1G_alpha_ne_1(ealpha, k+1)  // NOLINT
+                             - 2.0 * d1G_alpha_ne_1(ealpha, k)
+                             +       d1G_alpha_ne_1(ealpha, k-1));
+    }
   }
 }
