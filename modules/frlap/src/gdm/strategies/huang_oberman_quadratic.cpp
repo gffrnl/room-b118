@@ -90,12 +90,12 @@ Real melhorada_1(Real alpha) {  // k = 1 alpha != 1
     return T_2 / (alpha * (2 - alpha));
 }
 
-extern double d0G_alpha_ne_1(double, std::size_t);
-extern double d1G_alpha_ne_1(double, std::size_t);
-extern double d2G_alpha_ne_1(double, std::size_t);
-extern double d0G_alpha_eq_1(std::size_t);
-extern double d1G_alpha_eq_1(std::size_t);
-extern double d2G_alpha_eq_1(std::size_t);
+// extern double d0G_alpha_ne_1(double, std::size_t);
+// extern double d1G_alpha_ne_1(double, std::size_t);
+// extern double d2G_alpha_ne_1(double, std::size_t);
+// extern double d0G_alpha_eq_1(std::size_t);
+// extern double d1G_alpha_eq_1(std::size_t);
+// extern double d2G_alpha_eq_1(std::size_t);
 
 
 using b118::frlap::gdm::strategies::huang_oberman_quadratic;
