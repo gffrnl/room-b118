@@ -152,7 +152,7 @@ void huang_oberman_quadratic::generate_coefficients(double      ealpha,
         }
 
         // The formulation in Taylor series allows us to use
-        // the same loop for both even and odd indices.
+        // the same loop for both cases: alpha = 1 e alpha != 1
         for (std::size_t k = 2; k < n; k+=2)
             coeffs[k] = ca * 2.0 * serie_par(k, ealpha)*std::pow(deltax * k, - ealpha)/k;
 
