@@ -39,10 +39,13 @@ int main(int argc, char * argv[]) {
   int multiplicador_de_dominio = argc > 2? std::atoi(argv[2]) : 3;
   int refino_da_malha = argc > 3? std::atoi(argv[3]) : 1;
 
-  if (!(tipo_coefficientes == "huob1") && !(tipo_coefficientes == "huob2")) {
+  if (!(tipo_coefficientes == "gormai") &&
+      !(tipo_coefficientes == "huob1") &&
+      !(tipo_coefficientes == "huob2")) {
     cerr << "primeiro argumento deve ser:\n"
-            "  `huob1`: coeficientes Huang & Oberman linear\n"
-            "  `huob2`: coeficientes Huang & Oberman quadratico"
+            "  `gormai`: coeficientes de Gorenflo & Mainardi\n"
+            "  `huob1` : coeficientes de Huang & Oberman linear\n"
+            "  `huob2` : coeficientes de Huang & Oberman quadratico"
          << endl;
     return EXIT_FAILURE;
   }
@@ -55,7 +58,9 @@ int main(int argc, char * argv[]) {
   double b = b0 * multiplicador_de_dominio;
   std::size_t n = 40 * multiplicador_de_dominio * refino_da_malha + 1;
   (void) std::puts("\n\t*** Benchmark 7.0.1 ***\n");
-  if (tipo_coefficientes == "huob1") {
+  if (tipo_coefficientes == "gormai") {
+    cout << "[using gorenflo_mainardi]" << endl;
+  } else if (tipo_coefficientes == "huob1") {
     cout << "[using huang_oberman_linear]" << endl;
   } else if (tipo_coefficientes == "huob2") {
     cout << "[using huang_oberman_quadratico]" << endl;
@@ -117,7 +122,12 @@ int main(int argc, char * argv[]) {
   std::vector<double> FLY0;
   decltype(tempo_1) tempo_2;
   decltype(tempo_1) tempo_3;
-  if (tipo_coefficientes == "huob1") {
+  if (tipo_coefficientes == "gormai") {
+    b118::frlap::gdm::trunc_uniform_gormai method(ealpha, deltax);
+    tempo_2 = std::chrono::high_resolution_clock::now();
+    method.compute(fnyvals, ja, jb, FLY0);
+    tempo_3 = std::chrono::high_resolution_clock::now();
+  } else if (tipo_coefficientes == "huob1") {
     b118::frlap::gdm::trunc_uniform_huob1 method(ealpha, deltax);
     tempo_2 = std::chrono::high_resolution_clock::now();
     method.compute(fnyvals, ja, jb, FLY0);
@@ -171,7 +181,7 @@ int main(int argc, char * argv[]) {
 
 
   // Write the results to a file:
-  if (false) {
+  if (true) {
     std::FILE *fp;
 
     if ((fp = std::fopen("bench-701.dat", "w")) == NULL) {
