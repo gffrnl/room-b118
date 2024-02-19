@@ -32,6 +32,60 @@
 #define M_1_SQRTPI 0.564189583547756286948079451561
 #endif
 
+template <class Real>
+Real serie_par(int k, Real alpha) {
+    Real inv_k = 1/static_cast<Real>(k);
+    Real x = inv_k*inv_k;
+    Real x_2n = 1;
+    Real prod = 1/static_cast<Real>(6);  // (alpha-1)*alpha/(n+1)! para n=2.
+    Real T0 = 2*prod;
+    Real soma = 0;  // 2*prod;
+
+    for (int n = 4 ; n < 300; n += 2) {
+        prod *= (alpha-3 + n)*(alpha-2 + n)/(n*(n+1));
+        x_2n *= x;
+        auto const soma_old = soma;
+        soma = soma_old + prod*x_2n*n;
+        if (soma == soma_old) {
+            break;
+        }
+    }
+    // return 2 * x * (T0 + soma) * pow(k, 1 - alpha);  // /(alpha*(alpha-1));
+    return 2 * (T0 + soma);
+}
+
+
+
+template <class Real>
+Real serie_impar(int k, Real alpha) {
+    Real inv_2k = 2/static_cast<Real>(k);
+    Real x = inv_2k*inv_2k;
+    Real x_2n = 1;
+    Real prod = 1/static_cast<Real>(6);  // (alpha-1)*alpha/(n+1)! para n=2.
+    Real T0 = prod;
+    Real soma = 0;
+    for (int n = 4 ; n < 300; n += 2) {
+        prod *= (alpha-3 + n)*(alpha-2 + n)/(n*(n+1));
+        x_2n *= x;
+        auto const soma_old = soma;
+        soma = soma_old + prod*x_2n*(3-n);
+        if (soma == soma_old) {
+            break;
+        }
+    }
+    // return x * (soma + T0) * pow(k, 1 - alpha);  // /(alpha*(alpha-1));
+    return (soma + T0)*4;
+
+}
+
+
+template <class Real>
+Real melhorada_1(Real alpha) {  // k = 1 alpha != 1
+    Real log3 = log(3);
+    Real T_1 = -std::expm1(log3*(1 - alpha)) / (1 - alpha);
+    Real T_2 = 4 + (alpha + 4) * T_1 / 2;
+    return T_2 / (alpha * (2 - alpha));
+}
 extern double d0G_alpha_ne_1(double, std::size_t);
 extern double d1G_alpha_ne_1(double, std::size_t);
 extern double d2G_alpha_ne_1(double, std::size_t);
@@ -69,8 +123,8 @@ void huang_oberman_quadratic::generate_coefficients(double      ealpha,
             ca = - frlap::normal_const<1>(1.0);
             ch = 1.0 / deltax;
         } else {
-            ca = - frlap::normal_const<1>(ealpha);
-            ch = std::pow(deltax, -ealpha);
+            ca = - frlap::normal_const<1>(ealpha);  // -C1,alpha
+            ch = std::pow(deltax, -ealpha);         // 1/h^alpha
         }
 
 
@@ -86,9 +140,9 @@ void huang_oberman_quadratic::generate_coefficients(double      ealpha,
             std::exp(std::lgamma(0.5 * (ealpha + 1.0))
                 - std::lgamma(2.0 -  0.5 * ealpha));
 
-        ch *= ca;
+        auto ca_ch = ca*ch;
         if (b118::almost_equal(ealpha, 1.0)) {
-            coeffs[1] = ch * (1.0
+            coeffs[1] = ca_ch * (1.0
                 -       d2G_alpha_eq_1(1)
                 - 0.5 * d1G_alpha_eq_1(3)
                 - 1.5 * d1G_alpha_eq_1(1)
@@ -96,37 +150,25 @@ void huang_oberman_quadratic::generate_coefficients(double      ealpha,
                 -       d0G_alpha_eq_1(1));
 
             for (std::size_t k = 2; k < n; k+=2)
-                coeffs[k] = ch * 2.0 * (d1G_alpha_eq_1(k+1)
+                coeffs[k] = ca_ch * 2.0 * (d1G_alpha_eq_1(k+1)
                         + d1G_alpha_eq_1(k-1)
                                         - d0G_alpha_eq_1(k+1)
                                         + d0G_alpha_eq_1(k-1));
 
             for (std::size_t k = 3; k < n; k+=2)
-                coeffs[k] = ch * (- 0.5 * (d1G_alpha_eq_1(k+2)
+                coeffs[k] = ca_ch * (- 0.5 * (d1G_alpha_eq_1(k+2)
                             + d1G_alpha_eq_1(k-2))
                         - 3.0 * d1G_alpha_eq_1(k)
                         +       d0G_alpha_eq_1(k+2)
                         -       d0G_alpha_eq_1(k-2));
         } else {
-            coeffs[1] = ch * (1.0 / (2.0 - ealpha)
-                        -       d2G_alpha_ne_1(ealpha, 1)
-                        - 0.5 * d1G_alpha_ne_1(ealpha, 3)
-                        - 1.5 * d1G_alpha_ne_1(ealpha, 1)
-                        +       d0G_alpha_ne_1(ealpha, 3)
-                        -       d0G_alpha_ne_1(ealpha, 1));
+            coeffs[1] = ca_ch * melhorada_1(ealpha);
 
             for (std::size_t k = 2; k < n; k+=2)
-                coeffs[k] = ch * 2.0 * (d1G_alpha_ne_1(ealpha, k+1)  // TODO(Fabio) simplificar
-                        + d1G_alpha_ne_1(ealpha, k-1)
-                        - d0G_alpha_ne_1(ealpha, k+1)
-                        + d0G_alpha_ne_1(ealpha, k-1));
+                coeffs[k] = ca * 2.0 * serie_par(k, ealpha)*std::pow(deltax * k, - ealpha)/k;
 
             for (std::size_t k = 3; k < n; k+=2)
-                coeffs[k] = ch * (- 0.5 * (d1G_alpha_ne_1(ealpha, k+2)  // TODO(Fabio) simplificar
-                                        + d1G_alpha_ne_1(ealpha, k-2) )
-                                - 3.0 * d1G_alpha_ne_1(ealpha, k)
-                                +       d0G_alpha_ne_1(ealpha, k+2)
-                                -       d0G_alpha_ne_1(ealpha, k-2));
+                coeffs[k] = ca * serie_impar(k, ealpha)*std::pow(deltax * k, - ealpha)/k;
         }
     }
 }
