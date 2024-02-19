@@ -1,0 +1,93 @@
+\documentclass[12pt]{standalone}
+\usepackage{plotconfig}
+\usepackage{xcolor}
+\usepackage{comment}
+\begin{document}
+\centering
+% Using Huang-Oberman quadratic coefficients
+\begin{tikzpicture}[baseline]
+\begin{axis} [
+    width=0.7\textwidth,
+    height=0.585\textwidth,
+    ytick pos=left,
+    yticklabel style={/pgf/number format/fixed,
+                      /pgf/number format/precision=3},
+    xmin=-2,
+    xmax=2,
+    %ymin=-0.4,
+    %ymax=0.8,
+    xtick={-2, -1, 0, 1, 2},
+    ytick={-0.2, -0.1, 0, 0.2, 0.4, 0.6, 0.8},
+    xlabel = {$x$},
+    ylabel = {$\left(-\partial_{xx}^2\right)^{\alpha/2}\!y(x)$},
+    legend columns=2,
+    legend cell align=left,
+    legend style={
+        at={(0.5, 0.23)},
+        anchor=north,
+        font=\small,
+        /tikz/every even column/.append style={column sep=0.5cm}
+    }
+]
+
+% Read the file with the data
+\pgfplotstableread{\datapath bench-701.dat}{\datatable};
+
+% Exact solution
+\addplot[color=gray!85, line width=5pt] table [x=X, y=Exact] {\datatable};
+
+% Values of input function
+%\addplot[thick] table [x=x, y=u] {\datatable};
+
+% Approximations
+\addplot[ultra thick] table [x=X, y=FLY] {\datatable};
+\addplot[very thick,  dash dot] table [x=X, y=FLY0] {\datatable};
+\addplot[line width=3.5pt, dotted] table [x=X, y=FF] {\datatable};
+
+% Define the legend
+%\legend{exact, approximation, truncated, far-field};
+
+\end{axis}
+\end{tikzpicture}%
+%
+\begin{tikzpicture}[baseline]
+\begin{axis} [
+    width=0.7\textwidth,
+    height=0.35\textwidth,
+    enlargelimits = false,
+    axis line style={draw=none},
+    hide x axis,
+    xmin=-2,
+    xmax=2,
+    yshift=0.15\textwidth,
+    axis y line*=right,
+    ytick style={color=red!85, thick},
+    yticklabel style={/pgf/number format/fixed,
+                      /pgf/number format/precision=6,
+                      color=red!85},
+    ylabel style={at={(current axis.north east)},
+                  rotate=-90,
+                  anchor=south west,
+                  text width=1cm,
+                  color=red!85},
+    enlarge y limits = 0.2,
+    %ytick={0.108,0.109,0.110,0.111,0.112,0.113},
+    ylabel={abs. error}
+    %legend columns=2,
+    %legend cell align=left,
+    %legend style={
+    %    at={(0.5, 0.265)},
+    %    anchor=north,
+    %    font=\small,
+    %    /tikz/every even column/.append style={column sep=0.5cm}
+    %}
+]
+% Read the file with the data
+\pgfplotstableread{\datapath bench-701.dat}{\datatable};
+% Approximations
+\addplot[line width=1pt, red!80] table [x=X, y=Error] {\datatable};
+% Define the legend
+%\legend{{Absolute Error}};
+\end{axis}
+\end{tikzpicture}%
+\end{document}
