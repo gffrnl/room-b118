@@ -1,9 +1,10 @@
-/*   libfrlap
+/*   libb118
  *
- *   include/frlap/gdm/strategies/spectral.hpp
- *     Spectral strategy
+ *   modules/frlap/b118/frlap/gdm/strategies/spectral_tanh_sinh.hpp
  *
- *   Copyright (C) 2023  Guilherme F. Fornel <gffrnl@gmail.com>
+ *   Spectral strategy (uses tanh_sinh integrator)
+ *
+ *   Copyright (C) 2024   Guilherme F. Fornel        <gffrnl@gmail.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -20,13 +21,20 @@
  */
 
 #pragma once
-#include <frlap/gdm/strategy.hpp>
+#include <b118/frlap/gdm/strategy.hpp>
 
-namespace frlap { namespace gdm { namespace strategies {  
-  struct spectral_tanh_sinh final : public frlap::gdm::strategy
-  {
-    void generate_coefficients(double                ealpha,
-			       double                deltax,
-			       std::vector<double> & coeffs) const override;
-  };
-}}}
+namespace b118 {
+namespace frlap {
+namespace gdm {
+namespace strategies {
+
+struct spectral_tanh_sinh final : public strategy {
+  void generate_coefficients(double  ealpha,
+                             double  deltax,
+                             double* coeffs, std::size_t n) const override;
+};
+
+}  // end namespace strategies
+}  // end namespace gdm
+}  // end namespace frlap
+}  // end namespace b118

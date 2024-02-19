@@ -39,15 +39,19 @@ int main(int argc, char * argv[]) {
   int multiplicador_de_dominio = argc > 2? std::atoi(argv[2]) : 3;
   int refino_da_malha = argc > 3? std::atoi(argv[3]) : 1;
 
-  if (!(tipo_coefficientes == "gormai") &&
-      !(tipo_coefficientes == "huob1")  &&
-      !(tipo_coefficientes == "huob2")  &&
+  if (!(tipo_coefficientes == "spec_qawo") &&
+      !(tipo_coefficientes == "spec_thsh") &&
+      !(tipo_coefficientes == "gormai")    &&
+      !(tipo_coefficientes == "huob1")     &&
+      !(tipo_coefficientes == "huob2")     &&
       !(tipo_coefficientes == "c3point")) {
     cerr << "primeiro argumento deve ser:\n"
-            "  `gormai` : coeficientes de Gorenflo & Mainardi\n"
-            "  `huob1`  : coeficientes de Huang & Oberman linear\n"
-            "  `huob2`  : coeficientes de Huang & Oberman quadratico\n"
-            "  `c3point`: coeficientes da periodizacao da regra de 3 pontos"
+            "  `spec_qawo`: coeficientes espectrais (qawo)\n"
+            "  `spec_thsh`: coeficientes espectrais (tanh_sinh)\n"
+            "  `gormai`   : coeficientes de Gorenflo & Mainardi\n"
+            "  `huob1`    : coeficientes de Huang & Oberman linear\n"
+            "  `huob2`    : coeficientes de Huang & Oberman quadratico\n"
+            "  `c3point`  : coeficientes da periodizacao da regra de 3 pontos"
          << endl;
     return EXIT_FAILURE;
   }
@@ -59,8 +63,14 @@ int main(int argc, char * argv[]) {
   double a = a0 * multiplicador_de_dominio;
   double b = b0 * multiplicador_de_dominio;
   std::size_t n = 40 * multiplicador_de_dominio * refino_da_malha + 1;
+
   (void) std::puts("\n\t*** Benchmark 7.0.1 ***\n");
-  if (tipo_coefficientes == "gormai") {
+
+  if (tipo_coefficientes == "spec_qawo") {
+    cout << "[using spectral_qawo]" << endl;
+  } else if (tipo_coefficientes == "spec_thsh") {
+    cout << "[using spectral_thsh]" << endl;
+  } else if (tipo_coefficientes == "gormai") {
     cout << "[using gorenflo_mainardi]" << endl;
   } else if (tipo_coefficientes == "huob1") {
     cout << "[using huang_oberman_linear]" << endl;
@@ -126,7 +136,19 @@ int main(int argc, char * argv[]) {
   std::vector<double> FLY0;
   decltype(tempo_1) tempo_2;
   decltype(tempo_1) tempo_3;
-  if (tipo_coefficientes == "gormai") {
+  if (tipo_coefficientes == "spec_qawo") {
+    cout << "[using spectral_qawo]" << endl;
+    b118::frlap::gdm::trunc_uniform_spec_qawo method(ealpha, deltax);
+    tempo_2 = std::chrono::high_resolution_clock::now();
+    method.compute(fnyvals, ja, jb, FLY0);
+    tempo_3 = std::chrono::high_resolution_clock::now();
+  } else if (tipo_coefficientes == "spec_thsh") {
+    cout << "[using spectral_thsh]" << endl;
+    b118::frlap::gdm::trunc_uniform_spec_thsh method(ealpha, deltax);
+    tempo_2 = std::chrono::high_resolution_clock::now();
+    method.compute(fnyvals, ja, jb, FLY0);
+    tempo_3 = std::chrono::high_resolution_clock::now();
+  } else if (tipo_coefficientes == "gormai") {
     b118::frlap::gdm::trunc_uniform_gormai method(ealpha, deltax);
     tempo_2 = std::chrono::high_resolution_clock::now();
     method.compute(fnyvals, ja, jb, FLY0);
@@ -191,7 +213,7 @@ int main(int argc, char * argv[]) {
 
 
   // Write the results to a file:
-  if (true) {
+  if (false) {
     std::FILE *fp;
 
     if ((fp = std::fopen("bench-701.dat", "w")) == NULL) {
