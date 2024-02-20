@@ -1,8 +1,8 @@
 /*   libb118
  *
  *   modules/frlap/b118/frlap/gdm/strategies/huang_oberman_quadratic.hpp
- *   
- *   Huang & Oberman Quadratic strategy
+ *
+ *   Huang & Oberman quadratic strategy
  *
  *   Copyright (C) 2024   Guilherme F. Fornel        <gffrnl@gmail.com>
  *
@@ -29,9 +29,9 @@ namespace gdm {
 namespace strategies {
 
 struct huang_oberman_quadratic final : public strategy {
-    void generate_coefficients(double  ealpha,
-                               double  deltax,
-                               double* coeffs, std::size_t n) const override;
+  void generate_coefficients(double  ealpha,
+                             double  deltax,
+                             double* coeffs, std::size_t n) const override;
 };
 
 }  // end namespace strategies

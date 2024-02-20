@@ -29,7 +29,12 @@
 #include <b118/frlap/detail/fstp.hpp>
 #include <b118/frlap/gdm.hpp>
 #include <b118/frlap/gdm/strategy.hpp>
+#include <b118/frlap/gdm/strategies/spectral_qawo.hpp>
+#include <b118/frlap/gdm/strategies/spectral_tanh_sinh.hpp>
+#include <b118/frlap/gdm/strategies/gorenflo_mainardi.hpp>
+#include <b118/frlap/gdm/strategies/huang_oberman_linear.hpp>
 #include <b118/frlap/gdm/strategies/huang_oberman_quadratic.hpp>
+#include <b118/frlap/gdm/strategies/centered_3_point_periodized.hpp>
 #include <b118/frlap/gdm/convolucao.hpp>
 
 #include <iostream>
@@ -126,40 +131,23 @@ namespace b118 {
 namespace frlap {
 namespace gdm {
 
-//   typedef trunc_uniform<
-//     strategies::spectral
-//   > trunc_uniform_spec;
+  using trunc_uniform_spec_qawo =
+    trunc_uniform<strategies::spectral_qawo>;
 
-//   typedef trunc_uniform<
-//     strategies::spectral_ooura
-//   > trunc_uniform_spec_ooura;
+  using trunc_uniform_spec_thsh =
+    trunc_uniform<strategies::spectral_tanh_sinh>;
 
-//   typedef trunc_uniform<
-//     strategies::spectral_qawo
-//   > trunc_uniform_spec_qawo;
+  using trunc_uniform_gormai =
+    trunc_uniform<strategies::gorenflo_mainardi>;
 
-//   typedef trunc_uniform<
-//     strategies::spectral_tanh_sinh
-//   > trunc_uniform_spec_thsh;
-    
-//   typedef trunc_uniform<
-//     strategies::gorenflo_mainardi
-//   > trunc_uniform_gormai;
+  using trunc_uniform_huob1 =
+    trunc_uniform<strategies::huang_oberman_linear>;
 
-//   typedef trunc_uniform<
-//     strategies::huang_oberman_linear
-//   > trunc_uniform_huob1;
+  using trunc_uniform_huob2 =
+    trunc_uniform<strategies::huang_oberman_quadratic>;
 
-//   typedef trunc_uniform<
-//     strategies::huang_oberman_quadratic
-//   > trunc_uniform_huob2;
-
-    using trunc_uniform_huob2 =
-        trunc_uniform<strategies::huang_oberman_quadratic>;
-
-//   typedef trunc_uniform<
-//     strategies::centered_3_point_periodized
-//   > trunc_uniform_3point;
+  using trunc_uniform_c3point =
+    trunc_uniform<strategies::centered_3_point_periodized>;
 
 }  // end namespace gdm
 }  // end namespace frlap
