@@ -16,6 +16,8 @@ target_sources(b118-frlap
                 b118/frlap/gdm/strategy.hpp
                 b118/frlap/gdm/trunc_uniform.hpp
                 # strategies
+                b118/frlap/gdm/strategies/spectral_qawo.hpp
+                b118/frlap/gdm/strategies/spectral_tanh_sinh.hpp
                 b118/frlap/gdm/strategies/gorenflo_mainardi.hpp
                 b118/frlap/gdm/strategies/huang_oberman_linear.hpp
                 b118/frlap/gdm/strategies/huang_oberman_quadratic.hpp
@@ -30,6 +32,8 @@ target_sources(b118-frlap
     PRIVATE
         src/b118-frlap.cpp
         # strategies
+        src/gdm/strategies/spectral_qawo.cpp
+        src/gdm/strategies/spectral_tanh_sinh.cpp
         src/gdm/strategies/gorenflo_mainardi.cpp
         src/gdm/strategies/huang_oberman.cpp
         src/gdm/strategies/huang_oberman_linear.cpp
