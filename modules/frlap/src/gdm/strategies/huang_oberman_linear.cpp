@@ -39,20 +39,22 @@ using b118::frlap::gdm::strategies::huang_oberman_linear;
 
 
 template <typename Real>
-Real series(int k, Real alpha) {
+Real series(int k, Real ealpha) {
   Real inv_k = 1/static_cast<Real>(k);
   Real x = inv_k*inv_k;
-  Real prod = 1/static_cast<Real>(2);
+  Real prod = 1;
   Real sum = 0;
   for (int n = 4 ; n < 300; n += 2) {
-      prod *= x*(alpha - 3 + n)*(alpha - 2 + n)/(n * (n - 1));
-          auto old_sum = sum;
+      // prod *= x*(ealpha - 3 + n)*(ealpha - 2 + n)/(n * (n - 1));
+      prod *= ((ealpha - 3)/n + 1)*((ealpha - 2)/n + 1)
+             / ((1 - static_cast<Real>(1)/n)) * x;
+      auto old_sum = sum;
       sum = old_sum + prod;
       if (sum == old_sum) {
           break;
       }
   }
-  return (1 + 2*sum);
+  return 1 + sum;
 }  // Asymptotics = 1 as k -> infinity
 
 

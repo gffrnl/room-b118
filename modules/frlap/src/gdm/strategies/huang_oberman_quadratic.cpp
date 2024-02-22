@@ -31,63 +31,74 @@
 #include <b118/frlap/gdm/strategies/huang_oberman_quadratic.hpp>
 
 
+// TODO(Guilherme): Better names for the functions?
+// TODO(Guilherme): Is it necessary to use almost_equal in this file?
+//                : All expression are well conditioned at alpha = 1.
+
+
 // The following two functions are involved in calculating the coefficients
 // The formulation via Taylor Series is regular at alpha = 1 and removes
 // cathastrophic cancelations near both alpha = 1 and k -> infinity.
 // In both the first term is summed in the end, so we have a bit of increased
 // accuracy.
-// Both present the asymptotics 4/6 as k -> infinity
+// Both present the asymptotics 4/6 as k -> infinity.
+// This asymptotic could be absorved in the main loop.
+// Obs1: The series are truncated at 300 terms, which is more than enough
+//      for 50 digits.
 template<class Real>
-Real series_even(int k, Real alpha) {
-  Real inv_k = 1/static_cast<Real>(k);
-  Real x = inv_k*inv_k;
-  Real x_2n = 1;
-  Real prod = 1/static_cast<Real>(6);  // (alpha-1)*alpha/(n+1)! para n=2.
-  Real T0 = 2*prod;  // first term of the series
-  Real soma = 0;
+Real series_even(int k, Real ealpha) {
+  Real constexpr assymp = static_cast<Real>(4) / 6;
+  Real const inv_k = 1/static_cast<Real>(k);
+  Real const x = inv_k*inv_k;
+  Real const T0 = 1;  // first term of the series
+  Real prod = static_cast<Real>(1)/2;
+  Real sum = 0;
+  Real old_sum;
 
   for (int n = 4 ; n < 300; n += 2) {
-      prod *= (alpha - 3 + n)*(alpha - 2 + n)/(n*(n+1));
-      x_2n *= x;
-      auto soma_old = soma;
-      soma = soma_old + prod*x_2n*n;
-      if (soma == soma_old) {
-          break;
-      }
+    prod *= ((ealpha - 3)/n + 1)*((ealpha - 2)/n + 1)
+            / ((1 + static_cast<Real>(1)/n)) * x;
+    old_sum = sum;
+    sum = old_sum + prod * n;
+    if (sum == old_sum) {
+      break;
+    }
   }
-  return 2 * (T0 + soma);
+  return (T0 + sum) * assymp;
 }  // Asymptotics = 4/6 as k -> infinity
 
 template<class Real>
-Real series_odd(int k, Real alpha) {
-  Real inv_2k = 2/static_cast<Real>(k);
-  Real x = inv_2k*inv_2k;
-  Real x_2n = 1;
-  Real prod = 1/static_cast<Real>(6);  // (alpha-1)*alpha/(n+1)! para n=2.
-  Real T0 = prod;
-  Real soma = 0;
+Real series_odd(int k, Real ealpha) {
+  Real constexpr assymp = static_cast<Real>(4) / 6;
+  Real const inv_2k = 2 / static_cast<Real>(k);
+  Real const x = inv_2k*inv_2k;
+  Real const T0 = 1;
+  Real sum = T0;
+  Real prod = T0;
+  Real old_sum;
+
   for (int n = 4 ; n < 300; n += 2) {
-      prod *= (alpha-3 + n)*(alpha-2 + n)/(n*(n+1));
-      x_2n *= x;
-      auto soma_old = soma;
-      soma = soma_old + prod*x_2n*(3-n);
-      if (soma == soma_old) {
+      prod *= ((ealpha - 3)/n + 1)*((ealpha - 2)/n + 1)
+            / ((1 + static_cast<Real>(1)/n)) * x;
+      old_sum = sum;
+      sum = old_sum + prod * (3 - n);
+      if (sum == old_sum) {
           break;
       }
   }
-  return (soma + T0)*4;
-}  // Asymptotics = 4/6 as k -> infinity
+  return sum * assymp;
+}
 
 // This function calcultes the coefficient para k = 1 for ealpha != 1.
 // The limit for ealpha -> 1 is (8 - 5*std::log(3))/2,
 // which comes from:
 // (exp(a*x) - 1)/x = a,   x -> 0.
 template<class Real>
-Real better_1(Real alpha) {  // k = 1 alpha != 1
-  Real log3 = std::log(3);
-  Real T_1 = -std::expm1(log3*(1 - alpha)) / (1 - alpha);
-  Real T_2 = 4 + (alpha + 4) * T_1 / 2;
-  return T_2 / (alpha * (2 - alpha));
+Real better_1(Real ealpha) {  // k = 1 alpha != 1
+  Real constexpr log3 = std::log(3);
+  Real const T_1 = -std::expm1(log3*(1 - ealpha)) / (1 - ealpha);
+  Real const T_2 = 4 + (ealpha + 4) * T_1 / 2;
+  return T_2 / (ealpha * (2 - ealpha));
 }
 
 // extern double d0G_alpha_ne_1(double, std::size_t);
@@ -105,7 +116,7 @@ void huang_oberman_quadratic::generate_coefficients(double      ealpha,
                                                     double*     coeffs,
                                                     std::size_t n) const {
   double constexpr inv_sqrtpi = b118::numbers::inv_sqrtpi_v<double>;
-
+  
   {  // Treat the boundary cases ealpha = 0 and ealpha = 2
     if (b118::almost_equal(ealpha, 0.0)) {
         coeffs[0] = 1.0;
@@ -153,11 +164,11 @@ void huang_oberman_quadratic::generate_coefficients(double      ealpha,
 
     // The formulation in Taylor series allows us to use
     // the same loop for both cases: alpha = 1 e alpha != 1
-    for (std::size_t k = 2; k < n; k+=2)
+    for (std::size_t k = 2; k < n; k += 2)
       coeffs[k] = 2.0 * ca * series_even(k, ealpha)
                            * std::pow(deltax * k, - ealpha) / k;
 
-    for (std::size_t k = 3; k < n; k+=2)
+    for (std::size_t k = 3; k < n; k += 2)
       coeffs[k] =       ca * series_odd(k, ealpha)
                            * std::pow(deltax * k, - ealpha) / k;
   }

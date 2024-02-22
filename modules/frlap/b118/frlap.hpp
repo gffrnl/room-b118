@@ -48,20 +48,34 @@ namespace frlap {
     ///
     /// @return The normalization constant.
     ///
-    template<unsigned n, typename Real>
+
+    // template<unsigned n, typename Real>
+    // inline Real normal_const(Real ealpha) {
+    //     if (std::isless<Real>(ealpha, 0) || std::isgreater<Real>(ealpha, 2))
+    //         throw std::invalid_argument("in function b118::frlap::normal_const"
+    //                                     "(): ealpha must lie between 0 and 2");
+
+    //     return ealpha * std::exp2(ealpha - 1)
+    //                   * std::pow(b118::numbers::inv_sqrtpi_v<Real>,
+    //                              static_cast<Real>(n))
+    //                   * std::exp(std::lgamma((static_cast<Real>(n) + ealpha) /
+    //                                           static_cast<Real>(2)) -
+    //                              std::lgamma((static_cast<Real>(2) - ealpha) /
+    //                                           static_cast<Real>(2)));
+    // }
+
+template<unsigned n, typename Real>
     inline Real normal_const(Real ealpha) {
         if (std::isless<Real>(ealpha, 0) || std::isgreater<Real>(ealpha, 2))
             throw std::invalid_argument("in function b118::frlap::normal_const"
                                         "(): ealpha must lie between 0 and 2");
-
-        return ealpha * std::exp2(ealpha - 1)
-                      * std::pow(b118::numbers::inv_sqrtpi_v<Real>,
-                                 static_cast<Real>(n))
-                      * std::exp(std::lgamma((static_cast<Real>(n) + ealpha) /
-                                              static_cast<Real>(2)) -
-                                 std::lgamma((static_cast<Real>(2) - ealpha) /
-                                              static_cast<Real>(2)));
+        return ealpha * (static_cast<Real>(2) - ealpha) / static_cast<Real>(2)
+                      * std::pow(b118::numbers::inv_sqrtpi_v<Real>, n)
+                      * std::exp2(ealpha - 1)
+                      * std::exp(std::lgamma((static_cast<Real>(n) + ealpha) / static_cast<Real>(2))
+                            - std::lgamma(static_cast<Real>(2) - ealpha / static_cast<Real>(2)));
     }
+
 
 }  // end namespace frlap
 }  // end namespace b118
