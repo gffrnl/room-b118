@@ -39,13 +39,15 @@ int main(int argc, char * argv[]) {
   int multiplicador_de_dominio = argc > 2? std::atoi(argv[2]) : 3;
   int refino_da_malha = argc > 3? std::atoi(argv[3]) : 1;
 
-  if (!(tipo_coefficientes == "spec_qawo") &&
+  if (!(tipo_coefficientes == "spec")      &&
+      !(tipo_coefficientes == "spec_qawo") &&
       !(tipo_coefficientes == "spec_thsh") &&
       !(tipo_coefficientes == "gormai")    &&
       !(tipo_coefficientes == "huob1")     &&
       !(tipo_coefficientes == "huob2")     &&
       !(tipo_coefficientes == "c3point")) {
     cerr << "primeiro argumento deve ser:\n"
+            "  `spec_qawo`: coeficientes espectrais\n"
             "  `spec_qawo`: coeficientes espectrais (qawo)\n"
             "  `spec_thsh`: coeficientes espectrais (tanh_sinh)\n"
             "  `gormai`   : coeficientes de Gorenflo & Mainardi\n"
@@ -66,7 +68,9 @@ int main(int argc, char * argv[]) {
 
   (void) std::puts("\n\t*** Benchmark 7.0.1 ***\n");
 
-  if (tipo_coefficientes == "spec_qawo") {
+  if (tipo_coefficientes == "spec") {
+    cout << "[using spectral]" << endl;
+  } else if (tipo_coefficientes == "spec_qawo") {
     cout << "[using spectral_qawo]" << endl;
   } else if (tipo_coefficientes == "spec_thsh") {
     cout << "[using spectral_thsh]" << endl;
@@ -136,7 +140,13 @@ int main(int argc, char * argv[]) {
   std::vector<double> FLY0;
   decltype(tempo_1) tempo_2;
   decltype(tempo_1) tempo_3;
-  if (tipo_coefficientes == "spec_qawo") {
+  if (tipo_coefficientes == "spec") {
+    cout << "[using spectral]" << endl;
+    b118::frlap::gdm::trunc_uniform_spec method(ealpha, deltax);
+    tempo_2 = std::chrono::high_resolution_clock::now();
+    method.compute(fnyvals, ja, jb, FLY0);
+    tempo_3 = std::chrono::high_resolution_clock::now();
+  } else if (tipo_coefficientes == "spec_qawo") {
     cout << "[using spectral_qawo]" << endl;
     b118::frlap::gdm::trunc_uniform_spec_qawo method(ealpha, deltax);
     tempo_2 = std::chrono::high_resolution_clock::now();

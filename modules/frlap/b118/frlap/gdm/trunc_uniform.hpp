@@ -29,6 +29,7 @@
 #include <b118/frlap/detail/fstp.hpp>
 #include <b118/frlap/gdm.hpp>
 #include <b118/frlap/gdm/strategy.hpp>
+#include <b118/frlap/gdm/strategies/spectral.hpp>
 #include <b118/frlap/gdm/strategies/spectral_qawo.hpp>
 #include <b118/frlap/gdm/strategies/spectral_tanh_sinh.hpp>
 #include <b118/frlap/gdm/strategies/gorenflo_mainardi.hpp>
@@ -130,6 +131,9 @@ struct trunc_uniform final : public general_differences_method {
 namespace b118 {
 namespace frlap {
 namespace gdm {
+
+  using trunc_uniform_spec =
+    trunc_uniform<strategies::spectral>;
 
   using trunc_uniform_spec_qawo =
     trunc_uniform<strategies::spectral_qawo>;

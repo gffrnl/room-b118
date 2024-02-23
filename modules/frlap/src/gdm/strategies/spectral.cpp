@@ -1,8 +1,8 @@
 /*   libb118
  *
- *   modules/frlap/src/gdm/strategies/spectral_qawo.cpp
+ *   modules/frlap/src/gdm/strategies/spectral.cpp
  *
- *   Spectral strategy (uses aqwo integrator)
+ *   Spectral strategy
  *
  *   Copyright (C) 2024   Guilherme F. Fornel        <gffrnl@gmail.com>
  *
@@ -20,24 +20,24 @@
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
 
-#include <gsl/gsl_integration.h>
 #include <cstddef>
 #include <cmath>
 #include <algorithm>
 #include <b118/almost_equal.hpp>
-#include <b118/frlap/gdm/strategies/spectral_qawo.hpp>
+#include <boost/math/quadrature/tanh_sinh.hpp>
+#include <b118/frlap/gdm/strategies/spectral.hpp>
+#include <boost/math/special_functions/hypergeometric_pFq.hpp>
 
-static double f(double x, void* p) {
-  double const expon = *static_cast<double *>(p);
-  return std::pow(x, expon);
-}
+#include <iostream>
 
-using b118::frlap::gdm::strategies::spectral_qawo;
+using b118::frlap::gdm::strategies::spectral;
 
-void spectral_qawo::generate_coefficients(double      ealpha,
-                                          double      deltax,
-                                          double*     coeffs,
-                                          std::size_t n) const {
+void spectral::generate_coefficients(double      ealpha,
+                                     double      deltax,
+                                     double*     coeffs,
+                                     std::size_t n) const {
+  using boost::math::hypergeometric_pFq;
+
   {  // Treat the boundary cases ealpha = 0 and ealpha = 2
     if (b118::almost_equal(ealpha, 0.0)) {
       coeffs[0] = 1.0;
@@ -69,33 +69,15 @@ void spectral_qawo::generate_coefficients(double      ealpha,
   }
 
   { // Treat the cases {0 < ealpha < 1} U {1 < ealpha < 2}
-    double err;
-    double ch = 1.0 / (M_PI * std::pow(deltax, ealpha));
-
-    coeffs[0] = std::pow(M_PI/deltax, ealpha) / (ealpha + 1.0);
-
-    {
-      gsl_integration_workspace  * w;
-      gsl_integration_qawo_table * t;
-      gsl_function F;
-      size_t levels = 30;
-
-      F.function = &f;
-      F.params = &ealpha;
-
-      w = gsl_integration_workspace_alloc(levels);
-      t = gsl_integration_qawo_table_alloc(0, M_PI, GSL_INTEG_COSINE, levels);
-
-      for (std::size_t k = 1; k < n; ++k) {
-        gsl_integration_qawo_table_set(t, k, M_PI, GSL_INTEG_COSINE);
-        gsl_integration_qawo(&F, 0.0, 1.1e-12, 1.1e-12, levels, w, t,
-                             &coeffs[k],
-                             &err);
-        coeffs[k] *= ch;
-      }
-
-      gsl_integration_qawo_table_free(t);
-      gsl_integration_workspace_free(w);
+    double const a1 = (ealpha + static_cast<double>(1)) / 2;
+    double const b1 = static_cast<double>(1) / 2;
+    double const b2 = (ealpha + static_cast<double>(3)) / 2;
+    double const ch = std::pow(M_PI / deltax, ealpha) / (ealpha + 1);
+    double const mult = - M_PI * M_PI / static_cast<double>(4);
+    for (std::size_t k = 1; k < n; ++k) {
+      coeffs[k] = ch * hypergeometric_pFq({a1}, {b1, b2}, mult * (k * k));
+      if (k == 1)
+        std::cout << "spec coeffs[" <<k <<"] = " << coeffs[1] << std::endl;
     }
   }
 }

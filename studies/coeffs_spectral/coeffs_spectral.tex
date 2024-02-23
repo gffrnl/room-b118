@@ -1,0 +1,213 @@
+\documentclass[10pt,a4paper]{article}%
+\usepackage{amsmath,amsfonts,amstext,amsthm,color}%
+%\usepackage{graphicx}%
+%\usepackage{tabu}
+\newcommand{\dx}[1][x]{\mathrm{d}{#1}}
+\begin{document}
+
+\section{Wolfram Alpha}
+
+\begin{equation}
+  \mu_k^{\text{SP}}
+  = \frac{1}{\pi h^\alpha} \int_0^\pi \cos(k\theta)\, \theta^\alpha  \, \dx[\theta] \\
+  = \frac{1}{\pi h^\alpha} \frac{\pi^{\alpha+1} \,{}_1F_2\left(\frac{\alpha+1}{2};\frac{1}{2},\frac{\alpha+3}{2};-\frac{(k\pi)^2}{4}\right)}{\alpha+1}
+  \;.
+\end{equation}
+
+\begin{equation}
+  \mu_k^{\text{SP}}
+  = \frac{1}{\pi h^\alpha} \int_0^\pi \cos(k\theta)\, \theta^\alpha  \, \dx[\theta] \\
+  = \frac{\pi^\alpha}{(\alpha+1)h^\alpha}\; {}_1F_2\left(\frac{\alpha+1}{2};\frac{1}{2},\frac{\alpha+3}{2};-\frac{(k\pi)^2}{4}\right)
+  \;.
+\end{equation}
+
+\section{Série}
+\begin{equation}
+  {}_1F_2\left(\frac{\alpha+1}{2};\frac{1}{2},\frac{\alpha+3}{2};-\frac{(k\pi)^2}{4}\right)
+  =\sum_{n=0}^{\infty} \frac{(a_1)_n}{(b_1)_n(b_2)_n}
+   \frac{z^n}{n!}
+  \;.
+\end{equation}
+\begin{equation}
+\begin{split}
+(a)_0 &= 1 \\
+(a)_n &= a\left(a+1\right)\left(a+2\right)\ldots\left(a+n-1\right)\,,\quad n\geq 1
+\end{split}
+\end{equation}
+
+\begin{equation}
+  {}_1F_2\left(\frac{\alpha+1}{2};\frac{1}{2},\frac{\alpha+3}{2};-\frac{(k\pi)^2}{4}\right)
+  =1 + \sum_{n=1}^{\infty} \frac{(a_1)_n}{(b_1)_n(b_2)_n}
+   \frac{z^n}{n!}
+  \;.
+\end{equation}
+
+Para $n \geq 1$
+\begin{equation}
+\begin{split}
+(a_1)_n &= a_1\left(a_1+1\right)\left(a_1+2\right)\ldots\left(a_1+n-1\right) \\
+(a_1)_n &= \frac{\alpha+1}{2}\left(\frac{\alpha+1}{2}+1\right)\left(\frac{\alpha+1}{2}+2\right)\ldots\left(\frac{\alpha+1}{2}+n-1\right) \\
+(a_1)_n &= \frac{1}{2^n}\left(\alpha+1\right)\left(\alpha+3\right)\left(\alpha+5\right)\ldots\left(\alpha+2n-1\right) \\
+\end{split}
+\end{equation}
+
+\begin{equation}
+\begin{split}
+(b_1)_n &= b_1\left(b_1+1\right)\left(b_1+2\right)\ldots\left(b_1+n-1\right) \\
+(b_1)_n &= \frac{1}{2}\left(\frac{1}{2}+1\right)\left(\frac{1}{2}+2\right)\ldots\left(\frac{1}{2}+n-1\right) \\
+(b_1)_n &= \frac{1}{2^n} 3\cdot 5\cdot\ldots\cdot \left(2n-1\right) \\
+\end{split}
+\end{equation}
+
+\begin{equation}
+\begin{split}
+(b_2)_n &= b_2\left(b_2+1\right)\left(b_2+2\right)\ldots\left(b_2+n-1\right) \\
+(b_2)_n &= \frac{\alpha+3}{2}\left(\frac{\alpha+3}{2}+1\right)\left(\frac{\alpha+3}{2}+2\right)\ldots\left(\frac{\alpha+3}{2}+n-1\right) \\
+(b_2)_n &= \frac{1}{2^n}\left(\alpha+3\right)\left(\alpha+5\right)\left(\alpha+7\right)\ldots\left(\alpha+2n+1\right) \\
+\end{split}
+\end{equation}
+
+\begin{equation}
+\begin{split}
+\frac{(a_1)_n}{(b_2)_n} = \frac{\left(\alpha+1\right)\left(\alpha+3\right)\left(\alpha+5\right)\ldots\left(\alpha+2n-1\right)}{\left(\alpha+3\right)\left(\alpha+5\right)\left(\alpha+7\right)\ldots\left(\alpha+2n+1\right)}
+&= \frac{(\alpha+1)}{(\alpha+2n+1)} \\
+&= \frac{\alpha+1}{\alpha+1+2n} 
+\end{split}
+\end{equation}
+
+\begin{equation}
+\sum_{n=1}^{\infty} \frac{(a_1)_n}{(b_1)_n(b_2)_n}
+   \frac{z^n}{n!}
+   = \frac{\alpha+1}{\alpha+1+2n} \frac{2^n}{\left(3\cdot 5\cdot\ldots\cdot \left(2n-1\right)\right)n!} z^n
+  \;.
+\end{equation}
+
+\begin{equation}
+\frac{(a_1)_n}{(b_1)_n(b_2)_n}
+   \frac{z^n}{n!}
+   = \frac{\alpha+1}{\alpha+2n+1} \frac{2^n}{\left(3\cdot 5\cdot\ldots\cdot \left(2n-1\right)\right)n!} z^n
+  \;.
+\end{equation}
+
+\begin{equation}
+\begin{split}
+\frac{(a_1)_{n+1}}{(b_1)_{n+1}(b_2)_{n+1}}
+   \frac{z^{n+1}}{(n+1)!}
+   &= \frac{\alpha+1}{\alpha+1+2(n+1)} \frac{2^{n+1}}{\left(3\cdot 5\cdot\ldots\cdot \left(2(n+1)-1\right)\right)(n+1)!} z^{n+1} \\
+   &= \frac{\alpha+1}{\alpha+2n+2} \frac{2^{n+1}}{\left(3\cdot 5\cdot\ldots\cdot \left(2n+1\right)\right)(n+1)n!} z^{n+1}
+  \;.
+\end{split}
+\end{equation}
+
+\begin{equation}
+\begin{split}
+\frac{(a_1)_{n+1}}{(b_1)_{n+1}(b_2)_{n+1}}
+   \frac{z^{n+1}}{(n+1)!}
+   &= \frac{\alpha+1}{\alpha+2n+2} \frac{2^{n+1}}{\left(3\cdot 5\cdot\ldots\cdot \left(2n+1\right)\right)(n+1)n!} z^{n+1}
+  \;.
+\end{split}
+\end{equation}
+
+Chamando
+\begin{equation}
+C_n = \frac{(a_1)_n}{(b_1)_n(b_2)_n} \frac{z^n}{n!}
+\end{equation}
+temos
+\begin{equation}
+\frac{C_{n+1}}{C_n}=
+\frac{\frac{\alpha+1}{\alpha+2n+2} \frac{2^{n+1}}{\left(3\cdot 5\cdot\ldots\cdot \left(2n+1\right)\right)(n+1)n!} z^{n+1}}{\frac{\alpha+1}{\alpha+2n+1} \frac{2^n}{\left(3\cdot 5\cdot\ldots\cdot \left(2n-1\right)\right)n!} z^n}
+=2\frac{\alpha+2n+1}{\alpha+2n+2}\frac{z}{(n+1)(2n+1)}
+\end{equation}
+
+\begin{equation}
+\frac{\alpha+2n+1}{\alpha+2n+2} = 1 - \frac{1}{\alpha+2n+2} = 1 - \frac{1}{\alpha+2(n+1)}
+\end{equation}
+
+\begin{equation}
+\frac{2}{(n+1)(2n+1)} = \frac{2}{2n^2+n+2n+2} = \frac{2}{2n^2+3n+2} = \frac{1}{n^2+3n/2+1}
+\end{equation}
+
+Portanto,
+\begin{equation}
+\begin{split}
+C_1 &= \frac{(a_1)_1}{(b_1)_1(b_2)_1} z \\
+C_{n+1} &=  C_n \left(1 - \frac{1}{\alpha+2(n+1)}\right)
+\left(\frac{z}{n^2+3n/2+1}\right) \\
+\end{split}
+\end{equation}
+
+\subsection{Pares e ímpares}
+\begin{equation}
+\begin{split}
+\frac{C_{n+2}}{C_n} &=
+\frac{\frac{\alpha+1}{\alpha+2(n+2)+1} \frac{2^{n+2}}{\left(3\cdot 5\cdot\ldots\cdot \left(2(n+2)-1\right)\right)(n+2)!} z^{n+2}}{\frac{\alpha+1}{\alpha+2n+1} \frac{2^n}{\left(3\cdot 5\cdot\ldots\cdot \left(2n-1\right)\right)n!} z^n} \\
+&=
+\frac{\frac{\alpha+1}{\alpha+2n+4+1} \frac{2^{n+2}}{\left(3\cdot 5\cdot\ldots\cdot \left(2n+4-1\right)\right)(n+2)(n+1)n!} z^{n+2}}{\frac{\alpha+1}{\alpha+2n+1} \frac{2^n}{\left(3\cdot 5\cdot\ldots\cdot \left(2n-1\right)\right)n!} z^n} \\
+&=
+\left(\frac{\alpha+2n+1}{\alpha+2n+5}\right)\left(\frac{4}{(2n+1)(2n+3)}\right)z^2
+\end{split}
+\end{equation}
+
+\begin{equation}
+\frac{\alpha+2n+1}{\alpha+2n+5} = 1 - \frac{4}{\alpha+2n+5}
+\end{equation}
+
+\begin{equation}
+(2n+1)(2n+3) = 4n^2 + 6n + 2n + 3 = 4n^2 + 8n +3
+\end{equation}
+
+Portanto,
+\begin{equation}
+\begin{split}
+C_{n+2}
+&= C_n \left(1 - \frac{4}{\alpha+2n+5}\right) \frac{4}{4n^2 + 8n +3} z^2 \\
+&= C_n \left(1 - \frac{4}{\alpha+2n+5}\right) \frac{1}{n^2 + 2n +3/4} z^2
+\end{split}
+\end{equation}
+
+
+
+\begin{equation}
+\frac{C_n}{C_{n+2}}=
+\left(\frac{\alpha+2n+5}{\alpha+2n+1}\right)\frac{(2n+1)(2n+3)}{4z^2}
+\end{equation}
+
+\begin{equation}
+\frac{\alpha+2n+5}{\alpha+2n+1}
+=1+\frac{4}{\alpha+2n+1}
+\end{equation}
+
+\begin{equation}
+(2n+1)(2n+3) = 4n^2+6n+2n+3 = 4n^2+8n+3
+\end{equation}
+
+Portanto,
+\begin{equation}
+C_n = C_{n+2} \left(1+\frac{4}{\alpha+2n+1}\right) \frac{n^2+2n+3/4}{z^2}
+\end{equation}
+
+\begin{equation}
+\begin{split}
+C_1 &= \frac{a_1}{b_1 b_2} z = \frac{\frac{\alpha+1}{2}}{\frac{1}{2} \frac{\alpha+3}{2}} z
+= 2\left(\frac{\alpha+1}{\alpha+3}\right) z =
+2\left(1-\frac{2}{\alpha+3}\right) z =
+\left(2-\frac{4}{\alpha+3}\right) z
+\end{split}
+\end{equation}
+
+\begin{equation}
+\begin{split}
+C_2 &= \frac{a_1(a_1+1)}{b_1(b_1+1) b_2(b_2+1)} z^2 = 
+C_1 \frac{(a_1+1)}{(b_1+1) (b_2+1)} z \\
+&=
+C_1 \frac{(\frac{\alpha+1}{2}+1)}{(\frac{1}{2}+1) (\frac{\alpha+3}{2}+1)} z =
+C_1 \frac{(\frac{\alpha+3}{2})}{(\frac{3}{2}) (\frac{\alpha+5}{2})} z = 
+C_1 \frac{2}{3} \left(\frac{\alpha+3}{\alpha+5}\right) z \\
+&=
+C_1 \left(\frac{2}{3}-\frac{4}{3\alpha+15}\right) z
+\end{split}
+\end{equation}
+
+
+\end{document}
+
