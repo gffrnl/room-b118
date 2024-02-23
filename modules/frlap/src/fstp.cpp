@@ -111,8 +111,11 @@ void fast_symm_toeplitz_prod(std::size_t const                      n,
     fftw_free(aux);
 
     // Copy only necessary values to b
-    std::memcpy(static_cast<void *>(b), static_cast<void const *>(mu + k + 1),
-                n * sizeof(double));
+    for (std::size_t i = 0; i < n; ++i) {
+        b[i] += mu[i + k + 1];
+    }
+    // std::memcpy(static_cast<void *>(b), static_cast<void const *>(mu + k + 1),
+                // n * sizeof(double));
 
     fftw_free(mu);
 

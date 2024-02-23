@@ -75,7 +75,7 @@ Real series_odd(int k, Real alpha) {
           break;
       }
   }
-  return (soma + T0)*4;
+  return (soma + T0)*4;  // Passar para o início
 }  // Asymptotics = 4/6 as k -> infinity
 
 // This function calcultes the coefficient para k = 1 for ealpha != 1.
