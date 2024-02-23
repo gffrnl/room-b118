@@ -1,0 +1,164 @@
+% Identification
+\NeedsTeXFormat{LaTeX2e}[2023/10/11]
+\ProvidesPackage{gffrnl}[2023/10/11 My LaTeX package]
+
+% Preliminary declarations
+\RequirePackage[T1]{fontenc}
+\RequirePackage[utf8]{inputenc}
+\RequirePackage{amsmath}
+\RequirePackage{amsfonts}
+\RequirePackage{amssymb}
+\RequirePackage{amsthm}
+% graphics/figures
+\RequirePackage{color}
+\RequirePackage[dvipsnames]{xcolor}
+\RequirePackage{tikz}
+\RequirePackage{pgfplots}
+\RequirePackage{caption}
+\RequirePackage{subcaption}
+% files
+\RequirePackage{currfile}
+% listings
+\RequirePackage{listings}
+% referencing
+\RequirePackage{cleveref}
+\RequirePackage{doi}
+
+%\RequirePackage{cancel}
+\RequirePackage{soul}
+\RequirePackage[tickmarkheight=.5em,textwidth=\marginparwidth,textsize=small]{todonotes}
+
+% Options
+% More declarations
+
+\theoremstyle{definition}
+  \newtheorem{definition}{Definition}[chapter]
+  \newtheorem{definitionremark}{Remark}[definition]
+  \newtheorem{benchmark}{Benchmark}[section]
+
+\theoremstyle{plain}
+  \newtheorem{theorem}{Theorem}[chapter]
+  \newtheorem{corollary}{Corollary}[theorem]
+  \newtheorem{lemma}[theorem]{Lemma}
+  \newtheorem{proposition}[theorem]{Proposition}
+
+\theoremstyle{remark}
+  \newtheorem*{note}{Note}
+  \newtheorem{remark}{Remark}[chapter]
+  \newtheorem*{remark*}{Remark}
+  \newtheorem{theoremremark}{Remark}[theorem]
+  \newtheorem{lemmaremark}{Remark}[theorem]
+  \newtheorem{propositionremark}{Remark}[theorem]
+
+% Numeric sets
+\newcommand{\numset}[1]{\mathbb{#1}}
+\newcommand{\N}[1][]{\numset{N}^{#1}}
+\newcommand{\Z}[1][]{\numset{Z}^{#1}}
+\newcommand{\R}[1][]{\numset{R}^{#1}}
+\newcommand{\C}[1][]{\numset{C}^{#1}}
+
+% Norms
+\newcommand{\norm}[1]{\left\lVert{#1}\right\rVert}
+
+% Restriction of function
+\newcommand{\restr}[2][0]{#2{\raise-.5ex\hbox{\big|}_{#1}}}
+
+% Matrix symbols
+
+\makeatletter
+\newcommand*{\transpose}{%
+  {\mathpalette\@transpose{}}%
+}
+\newcommand*{\@transpose}[2]{%
+  % #1: math style
+  % #2: unused
+  \raisebox{\depth}{$\m@th#1\intercal$}%
+}
+\makeatother
+
+% Math Operators (needs package amsmath):
+\DeclareMathOperator{\sgn}{sgn}
+\DeclareMathOperator{\arctg}{arctg}
+\DeclareMathOperator{\supp}{supp}
+\DeclareMathOperator{\sinc}{sinc}
+
+% Principal value
+\newcommand{\pv}[1][]{\mathrm{pv}_{#1}}
+
+% Differential operators
+\newcommand{\dx}[1][x]{\mathrm{d}{#1}}
+\newcommand{\Lap}[1][]{\nabla^2{#1}}
+
+% Fourier transforms of differential operators
+\newcommand{\FourierLap}[1]{\widehat{\Lap{#1}}}
+\newcommand{\FourierMinusLap}[1]{\big(\!\MinusLap{#1}\big)^{\land}}
+
+% Fractional differential operators
+\newcommand{\frDxx}[2][]{(-\partial_{xx}^2)^{#2/2}#1}
+\newcommand{\frDxxalpha}[1][]{\frDxx[#1]{\alpha}}
+\newcommand{\frLap}[2][]{{(-\nabla^2)}^{#2/2}#1}
+\newcommand{\frLapalpha}[1][]{\frLap[#1]{\alpha}}
+
+% Fourier transforms of fractional differential operators
+\newcommand{\FourierfrDxx}[2][]{\widehat{\frDxx[#1]{#2}}}
+\newcommand{\FourierfrDxxalpha}[1][]{\widehat{\frDxxalpha{#1}}}
+\newcommand{\FourierfrLap}[2][]{\widehat{\frLap[#1]{#2}}}
+\newcommand{\FourierfrLapalpha}[1][]{\widehat{\frLapalpha{#1}}}
+
+% Discrete fractional differential operators
+\newcommand{\frDxxh}[2][]{(-\partial_{xx}^2)_h^{#2/2}#1}
+\newcommand{\frDxxalphah}[1][]{\frDxxh[#1]{\alpha}}
+\newcommand{\frDxxmuh}[2][]{(-\partial_{xx}^2)_{\mu,h}^{#2/2}#1}
+\newcommand{\frDxxalphamuh}[1][]{\frDxxmuh[#1]{\alpha}}
+\newcommand{\frLaph}[2][]{{(-\nabla^2)}_h^{#2/2}#1}
+\newcommand{\frLapalphah}[1][]{\frLaph[#1]{\alpha}}
+
+% Heat kernel
+\newcommand{\HeatKernel}{\mathcal{H}_t^{(d)}}
+\newcommand{\FourierHeatKernel}{\widehat{\mathcal{H}}_t^{(d)}}
+
+% Far Field and NearField Symbols
+\newcommand{\FFkern}{%
+  \mkern-4mu
+  \mathchoice{}{}{\mkern0.2mu}{\mkern0.5mu}%
+}
+\DeclareMathOperator{\FF}{F\FFkern F}
+\newcommand{\NFkern}{%
+  \mkern-4mu
+  \mathchoice{}{}{\mkern0.2mu}{\mkern0.5mu}%
+}
+\DeclareMathOperator{\NF}{N\NFkern F}
+
+
+% Colors (needs package xcolor):
+%\newcommand{\alert}[2][]{\textbf{\textcolor{red}{#2}}}
+\newcommand{\alert}[2][]{}
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+
+% Listings (needs the package listings):
+\lstdefinestyle{mycppstyle}{
+    language=C++,
+    backgroundcolor=\color{backcolour},
+    %backgroundcolor=\color{black!10!white},
+    commentstyle=\color{codegreen},
+    keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2,
+    captionpos=t
+}
+
+\lstset{style=mycppstyle}

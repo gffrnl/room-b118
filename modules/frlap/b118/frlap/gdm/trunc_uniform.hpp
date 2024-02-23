@@ -29,6 +29,7 @@
 #include <b118/frlap/detail/fstp.hpp>
 #include <b118/frlap/gdm.hpp>
 #include <b118/frlap/gdm/strategy.hpp>
+#include <b118/frlap/gdm/strategies/spectral.hpp>
 #include <b118/frlap/gdm/strategies/spectral_qawo.hpp>
 #include <b118/frlap/gdm/strategies/spectral_tanh_sinh.hpp>
 #include <b118/frlap/gdm/strategies/gorenflo_mainardi.hpp>
@@ -89,12 +90,13 @@ struct trunc_uniform final : public general_differences_method {
         std::size_t const nc = (jb+1 > n-ja)? jb+1 : n-ja;
 
         frLap_y.resize(n0);
-        frLap_y.shrink_to_fit();
+        frLap_y.shrink_to_fit();  // TODO(Guilherme): Verificar se é necessário
 
         std::vector<double> mu(nc);
         strategy.generate_coefficients(ealpha, deltax, mu.data(), mu.size());
+        // TODO(Fabio/Guilherme) criar condição para escolher entre convolução e produto.
         if (false) {
-            conv1d_ingenua(n0, na, mu.data()+ja-na+1, y.data(), frLap_y.data());
+            conv1d_ingenua(n0, na, mu.data() + ja - na + 1, y.data(), frLap_y.data());
 
             cross1d_ingenua(n0, nb, mu.data() + 1, y.data() + jb + 1,
                                     frLap_y.data());
@@ -102,22 +104,20 @@ struct trunc_uniform final : public general_differences_method {
             std::size_t const conv_size = n0 + std::max(na, nb) - 1;
             convolution conv(conv_size);
             conv.create_plans(conv_size);
-            conv.conv(n0, na, mu.data()+ja-na+1, y.data(), frLap_y.data(), false);
-            //conv1d_ingenua(n0, na, mu.data()+ja-na+1, y.data(), frLap_y.data());
-
+            conv.conv(n0, na, mu.data() + ja - na + 1, y.data(), frLap_y.data(), false);
             conv.conv(n0, nb, mu.data() + 1, y.data() + jb + 1, frLap_y.data(), true);
         }
 
         {
-            std::vector<double> yint(n0);
-            // 5.1. Assembly of Yint:
-            for (size_t i = 0; i < n0; i++)
-                yint[i] = y[i+ja];
-            std::vector<double> Ayint(n0);
+            // std::vector<double> yint(n0);
+            // // 5.1. Assembly of Yint:
+            // for (size_t i = 0; i < n0; i++)
+            //     yint[i] = y[i+ja];
+            // std::vector<double> Ayint(n0);
             // 5.4. Fast symmetric toeplitz-vector A*Yint:
-            fast_symm_toeplitz_prod(n0, mu.data(), yint.data(), Ayint.data());
-            for (std::size_t i = 0; i < n0; i++)
-                frLap_y[i] += Ayint[i];
+            fast_symm_toeplitz_prod(n0, mu.data(), y.data()+ja, frLap_y.data());
+            // for (std::size_t i = 0; i < n0; i++)
+            //     frLap_y[i] += Ayint[i];
         }
     }
 };
@@ -130,6 +130,9 @@ struct trunc_uniform final : public general_differences_method {
 namespace b118 {
 namespace frlap {
 namespace gdm {
+
+  using trunc_uniform_spec =
+    trunc_uniform<strategies::spectral>;
 
   using trunc_uniform_spec_qawo =
     trunc_uniform<strategies::spectral_qawo>;
