@@ -5,6 +5,7 @@
  *   Fractional Laplacian module (main header)
  *
  *   Copyright (C) 2024   Guilherme F. Fornel        <gffrnl@gmail.com>
+ *                        Fabio Souto de Azevedo     <fazedo@gmail.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
