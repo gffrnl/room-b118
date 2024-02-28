@@ -57,7 +57,7 @@ class equally_spaced {
         using pointer           = void;
         using reference         = Real &;
 
-        uniforme const * const that;
+        equally_spaced const * const that;
         size_type n;
 
         iterator& operator++() {
@@ -95,7 +95,7 @@ class equally_spaced {
         }
     };
 
-    using const_iterator = typename iterator const;
+    using const_iterator = iterator const;
 
  public:
     equally_spaced(Real a, Real b, std::size_t N)
