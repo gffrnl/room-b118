@@ -1,8 +1,10 @@
-# Base module
-add_subdirectory(base)
+# Room-b118 Math Library
 
-# Linear algebra module [b118::linalg]
+# core module
+add_subdirectory(core)
+
+# linalg module
 add_subdirectory(linalg)
 
-# Fractional Laplacian module [b118::frlap]
+# frlap module
 add_subdirectory(frlap)
