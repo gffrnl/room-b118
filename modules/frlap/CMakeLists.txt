@@ -33,6 +33,8 @@ target_sources(b118-frlap
                 include/b118/frlap/gdm/strategies/huang_oberman_linear.hpp
                 include/b118/frlap/gdm/strategies/huang_oberman_quadratic.hpp
                 include/b118/frlap/gdm/strategies/centered_3_point_periodized.hpp
+                # gdm far-field estimators
+                include/b118/frlap/gdm/far_field_estimator.hpp
 )
 
 target_sources(b118-frlap
