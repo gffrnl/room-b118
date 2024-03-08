@@ -6,6 +6,7 @@
 #include <vector>
 #include <b118/frlap.hpp>
 #include <boost/math/special_functions/hypergeometric_pFq.hpp>
+#include <b118/frlap/gdm/far_field_estimator.hpp>
 
 
 namespace Benchmark701 {
@@ -50,7 +51,15 @@ namespace Benchmark701 {
                          std::size_t                 ja,
                          std::size_t                 jb,
                          std::vector<double>       & ff) {  // NOLINT
-    using boost::math::hypergeometric_pFq;
+      using namespace b118::frlap::gdm;  // NOLINT
+      far_field_estimator<general> ffest(y, ealpha, -6.0, 6.0);
+      for (std::size_t j = ja; j <= jb; ++j) {
+        ff[j-ja] = ffest(x[j]);
+      }
+  }
+  
+/*
+  using boost::math::hypergeometric_pFq;
 
     std::size_t const n = x.size();
     double const C1a = b118::frlap::normal_const<1>(ealpha);
@@ -74,4 +83,5 @@ namespace Benchmark701 {
                                       + x[j] / std::fabs(x[n-1] + h/2)) );
       }
   }
+*/
 }  // end namespace Benchmark701

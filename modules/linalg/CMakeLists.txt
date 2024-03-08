@@ -13,6 +13,8 @@ set_target_properties(b118-linalg
         CMAKE_CXX_STANDARD_REQUIRED True
 )
 
+add_dependencies(b118-linalg b118-core)
+
 target_sources(b118-linalg
     PUBLIC
         FILE_SET b118_linalg_public_headers
@@ -26,7 +28,8 @@ target_sources(b118-linalg
             include/b118/linalg/matrix/symmetric_toeplitz.hpp
             include/b118/linalg/matrix.hpp
             include/b118/linalg/vector.hpp
-            include/b118/linalg/toeplitz/fstp.hpp
+            include/b118/linalg/toeplitz/fsymmtp_manager.hpp
+            include/b118/linalg/toeplitz/fast_symm_toeplitz_product.hpp
             include/b118/linalg/toeplitz/solvers/durbin.hpp
             include/b118/linalg/toeplitz/solvers/levinson.hpp
 )
@@ -35,6 +38,19 @@ target_include_directories(b118-linalg INTERFACE
   $<BUILD_INTERFACE:${CMAKE_CURRENT_SOURCE_DIR}/include>
   $<INSTALL_INTERFACE:include>  # <prefix>/include
 )
+
+target_link_libraries(b118-linalg
+    INTERFACE
+        b118-core
+        ${LIB_OPENBLAS}
+        ${LIB_FFTW3}
+)
+
+
+# Debug Postffix
+if (CMAKE_BUILD_TYPE STREQUAL "Debug")
+    set_target_properties(b118-linalg PROPERTIES DEBUG_POSTFIX "d")
+endif()
 
 # for CMAKE_INSTALL_INCLUDEDIR definition
 include(GNUInstallDirs)

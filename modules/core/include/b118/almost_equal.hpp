@@ -35,8 +35,10 @@ namespace b118 {
     // TODO(fazedo): change atol and rtol to fit the type
     template<typename Real>
     inline bool almost_equal(Real x, Real y,
-                             Real atol = 1.0e-5,
-                             Real rtol = 1.0e-8) {
+                             Real atol =
+                                sqrt(std::numeric_limits<Real>::epsilon()),
+                             Real rtol =
+                                cbrt(std::numeric_limits<Real>::epsilon())) {
         return std::fabs(x - y) < atol + rtol * std::fabs(y);
     }
 

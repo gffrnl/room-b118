@@ -31,11 +31,18 @@ namespace numbers {
     // <https://github.com/gcc-mirror/gcc/blob/master/libstdc%2B%2B-v3/include/std/numbers>
 
 
+    // pi
+    template<typename Real>
+    inline constexpr Real pi_v
+      = b118::enable_if_real_t<Real>(3.141592653589793238462643383279502884L);
+
     // 1/sqrt(pi)
     template<typename Real>
     inline constexpr Real inv_sqrtpi_v
       = b118::enable_if_real_t<Real>(0.564189583547756286948079451560772586L);
 
+    // for double
+    inline constexpr double pi = pi_v<double>;
     inline constexpr double inv_sqrt_pi = inv_sqrtpi_v<double>;
 
 }  // namespace numbers

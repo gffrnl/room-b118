@@ -1,11 +1,10 @@
 /*   libb118
  *
- *   modules/core/include/b118/utility.hpp
+ *   modules/base/b118/utility.hpp
  *
  *   Utilities
  *
- *   Copyright (C) 2024  Guilherme F. Fornel        <gffrnl@gmail.com>
- *                       Fabio Souto de Azevedo     <fazedo@gmail.com>
+ *   Copyright (C) 2024  Guilherme F. Fornel <gffrnl@gmail.com>
  *
  *   This program is free software: you can redistribute it and/or modify
  *   it under the terms of the GNU General Public License as published by
@@ -20,6 +19,7 @@
  *   You should have received a copy of the GNU General Public License
  *   along with this program.  If not, see <https://www.gnu.org/licenses/>.
  */
+
 
 #pragma once
 
@@ -139,3 +139,4 @@ class equally_spaced {
 };
 
 }  // end namespace b118
+

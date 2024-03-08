@@ -1,6 +1,6 @@
 /*   libb118
  *
- *   modules/frlap/include/b118/frlap/gdm/trunc_uniform.hpp
+ *   modules/frlap/include/b118/frlap/gdm/truncated_uniform.hpp
  *   
  *   Truncated uniform gdm
  *
@@ -25,6 +25,8 @@
 
 #include <cblas.h>
 #include <cassert>
+#include <vector>
+#include <algorithm>
 #include <type_traits>
 #include <b118/signal/convolution.hpp>
 #include <b118/linalg/toeplitz/fstp.hpp>
@@ -38,9 +40,6 @@
 #include <b118/frlap/gdm/strategies/huang_oberman_quadratic.hpp>
 #include <b118/frlap/gdm/strategies/centered_3_point_periodized.hpp>
 
-#include <iostream>
-#include <vector>
-#include <algorithm>
 
 void conv1d_ingenua(std::size_t output_size, std::size_t input_size,
                     double const * const kernel,
@@ -54,34 +53,39 @@ void cross1d_ingenua(std::size_t output_size, std::size_t input_size,
 
 
 
-namespace b118 {
+namespace b118  {
 namespace frlap {
-namespace gdm {
+namespace gdm   {
 
 template<
-    class Strategy,
-    typename = std::enable_if<
-                   std::is_base_of<strategy, Strategy>::value,
-                   bool
-               >
+    typename Real,
+    template<typename> class CoefficientGenerator  //,
+    // typename = std::enable_if<
+    //                std::is_base_of<strategy, Strategy>::value,
+    //                bool
+    //            >
 >
-struct trunc_uniform final : public general_differences_method {
-    trunc_uniform(double ealpha, double deltax)
-        : general_differences_method(ealpha, deltax)
+struct truncated_uniform final {
+    Real ealpha;
+    Real deltax;
+
+
+    truncated_uniform(Real ealpha, Real deltax)
+        : ealpha{ealpha}, deltax{deltax},
     {}
 
-    trunc_uniform() : trunc_uniform(0.0, 0.0) {}
+    truncated_uniform() : truncated_uniform(0, 1) {}
 
-    Strategy strategy;
+    CoefficientGenerator<Real> method;
 
     void compute(std::vector<double> const & y     ,
                  std::size_t                ja     ,
                  std::size_t                jb     ,
                  std::vector<double>&       frLap_y) override {
         if (jb > y.size()-1)
-        throw "jb > y.size()";
+            throw "jb > y.size()";
         if (ja > jb)
-        throw "ja > jb";
+            throw "ja > jb";
 
         std::size_t const n  = y.size();
         std::size_t const na = ja;
@@ -93,10 +97,12 @@ struct trunc_uniform final : public general_differences_method {
         frLap_y.shrink_to_fit();  // TODO(Guilherme): Verificar se é necessário
 
         std::vector<double> mu(nc);
-        strategy.generate_coefficients(ealpha, deltax, mu.data(), mu.size());
-        // TODO(Fabio/Guilherme) criar condição para escolher entre convolução e produto.
+        method.generate(ealpha, deltax, mu.data(), mu.size());
+        // TODO(Fabio/Guilherme) criar condição para escolher entre convolução
+        //                       e produto.
         if (false) {
-            conv1d_ingenua(n0, na, mu.data() + ja - na + 1, y.data(), frLap_y.data());
+            conv1d_ingenua(n0, na,  mu.data() + ja - na + 1, y.data(),
+                                    frLap_y.data());
 
             cross1d_ingenua(n0, nb, mu.data() + 1, y.data() + jb + 1,
                                     frLap_y.data());
@@ -104,8 +110,10 @@ struct trunc_uniform final : public general_differences_method {
             std::size_t const conv_size = n0 + std::max(na, nb) - 1;
             convolution conv(conv_size);
             conv.create_plans(conv_size);
-            conv.conv(n0, na, mu.data() + ja - na + 1, y.data(), frLap_y.data(), false);
-            conv.conv(n0, nb, mu.data() + 1, y.data() + jb + 1, frLap_y.data(), true);
+            conv.conv(n0, na, mu.data() + ja - na + 1, y.data(), frLap_y.data(),
+                      false);
+            conv.conv(n0, nb, mu.data() + 1, y.data() + jb + 1, frLap_y.data(),
+                      true);
         }
 
         {
@@ -115,7 +123,8 @@ struct trunc_uniform final : public general_differences_method {
             //     yint[i] = y[i+ja];
             // std::vector<double> Ayint(n0);
             // 5.4. Fast symmetric toeplitz-vector A*Yint:
-            fast_symm_toeplitz_prod(n0, mu.data(), y.data()+ja, frLap_y.data());
+            fast_symm_toeplitz_prod(n0, mu.data(), y.data()+ja,
+                                    frLap_y.data());
             // for (std::size_t i = 0; i < n0; i++)
             //     frLap_y[i] += Ayint[i];
         }
@@ -127,41 +136,42 @@ struct trunc_uniform final : public general_differences_method {
 }  // end namespace b118
 
 
-namespace b118 {
-namespace frlap {
-namespace gdm {
+// namespace b118 {
+// namespace frlap {
+// namespace gdm {
 
-  using trunc_uniform_spec =
-    trunc_uniform<strategies::spectral>;
+//   using trunc_uniform_spec =
+//     trunc_uniform<strategies::spectral>;
 
-  using trunc_uniform_spec_qawo =
-    trunc_uniform<strategies::spectral_qawo>;
+//   using trunc_uniform_spec_qawo =
+//     trunc_uniform<strategies::spectral_qawo>;
 
-  using trunc_uniform_spec_thsh =
-    trunc_uniform<strategies::spectral_tanh_sinh>;
+//   using trunc_uniform_spec_thsh =
+//     trunc_uniform<strategies::spectral_tanh_sinh>;
 
-  using trunc_uniform_gormai =
-    trunc_uniform<strategies::gorenflo_mainardi>;
+//   using trunc_uniform_gormai =
+//     trunc_uniform<strategies::gorenflo_mainardi>;
 
-  using trunc_uniform_huob1 =
-    trunc_uniform<strategies::huang_oberman_linear>;
+//   using trunc_uniform_huob1 =
+//     trunc_uniform<strategies::huang_oberman_linear>;
 
-  using trunc_uniform_huob2 =
-    trunc_uniform<strategies::huang_oberman_quadratic>;
+//   using trunc_uniform_huob2 =
+//     trunc_uniform<strategies::huang_oberman_quadratic>;
 
-  using trunc_uniform_c3point =
-    trunc_uniform<strategies::centered_3_point_periodized>;
+//   using trunc_uniform_c3point =
+//     trunc_uniform<strategies::centered_3_point_periodized>;
 
-}  // end namespace gdm
-}  // end namespace frlap
-}  // end namespace b118
+// }  // end namespace gdm
+// }  // end namespace frlap
+// }  // end namespace b118
 
 
 
 
 // Convolution via dot product
 // The output fr satisfies:
-// fr[i] += sum(kernel[input_size - 1 - i + j] * y[j], j = 0 ... input_size - 1), i = 0 .. output_size - 1
+// fr[i] += sum(kernel[input_size - 1 - i + j] * y[j],
+///         j = 0 ... input_size - 1), i = 0 .. output_size - 1
 // kernel[k] must be defined in [0, output_size + input_size - 1]
 void conv1d_ingenua(std::size_t output_size, std::size_t input_size,
                     double const * const kernel,
@@ -191,7 +201,8 @@ void conv1d_ingenua(std::size_t output_size, std::size_t input_size,
 
 // Cross-correlation via dot product
 // The output fr satisfies:
-// fr[i] += sum(kernel[output_size - 1 - i + j] * y[j], j = 0 ... input_size - 1), i = 0 .. output_size - 1
+// fr[i] += sum(kernel[output_size - 1 - i + j] * y[j],
+//          j = 0 ... input_size - 1), i = 0 .. output_size - 1
 // kernel[k] must be defined in [0, output_size + input_size - 1]
 void cross1d_ingenua(std::size_t output_size, std::size_t input_size,
                      double const * const kernel,

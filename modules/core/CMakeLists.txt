@@ -26,6 +26,15 @@ target_sources(b118-core
                 include/b118/equal_within_ulps.hpp
                 include/b118/closest_sorted.hpp
                 include/b118/linspace.hpp
+                # fftw
+                include/b118/fftw/complex.hpp
+                include/b118/fftw/complex_ptr.hpp
+                include/b118/fftw/alloc.hpp
+                include/b118/fftw/free.hpp
+                include/b118/fftw/plan.hpp
+                include/b118/fftw/manager.hpp
+                include/b118/fftw/managed.hpp
+                include/b118/fftw/dft.hpp
                 # vendors
                 include/b118/vendor/cppreference/equal_within_ulps.hpp
 )
