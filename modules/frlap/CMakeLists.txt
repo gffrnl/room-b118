@@ -28,6 +28,7 @@ target_sources(b118-frlap
                 include/b118/frlap/gdm/trunc_uniform.hpp
                 # gdm coefficients
                 include/b118/frlap/gdm/coefficients/generator.hpp
+                include/b118/frlap/gdm/coefficients/spectral_qawo.hpp
                 include/b118/frlap/gdm/coefficients/gorenflo_mainardi.hpp
                 include/b118/frlap/gdm/coefficients/huang_oberman_1.hpp
                 include/b118/frlap/gdm/coefficients/huang_oberman_2.hpp
