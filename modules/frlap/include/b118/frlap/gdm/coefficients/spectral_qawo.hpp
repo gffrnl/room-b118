@@ -48,7 +48,7 @@ struct spectral_qawo<double> :
     {}
 
     void generate(double ealpha, double deltax) {
-        constexpr double pi = b118::numbers::inv_sqrtpi_v<double>;
+        constexpr double pi = b118::numbers::pi_v<double>;
         std::size_t const n = coeffs.size();
 
         {  // Treat the boundary cases ealpha = 0 and ealpha = 2
@@ -93,7 +93,7 @@ struct spectral_qawo<double> :
                 gsl_function F;
                 size_t levels = 30;
 
-                F.function = &f;
+                F.function = &spectral_qawo<double>::f;
                 F.params = &ealpha;
 
                 w = gsl_integration_workspace_alloc(levels);
@@ -117,7 +117,7 @@ struct spectral_qawo<double> :
  private:
     static double f(double x, void* p) {
         double const expon = *static_cast<double *>(p);
-        return std::pow(x, expon);
+        return  std::pow(x, expon);
     }
 };
 
