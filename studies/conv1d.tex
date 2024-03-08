@@ -1,0 +1,28 @@
+\documentclass[10pt,a4paper]{article}%
+\usepackage{amsmath,amsfonts,amstext,amsthm,color}%
+%\usepackage{graphicx}%
+%\usepackage{tabu}
+\begin{document}
+
+\section{Convolução}
+Seja
+$$z_i = \sum_{j=0}^{n_a-1} \mu_{i-j}y_j, ~~~i= 0, \cdots n_0 -1 $$
+
+O núcleo $\mu$ precisa ser conhecido entre $-(n_a - 1)$ e $(n_0 - 1)$,
+isto é, em $(n_0-1) + (n_a - 1) + 1 = n_0 + n_a -1$ pontos.
+
+
+Defina $x_{i} = \mu_{n_a-1+i}$ e temos:
+$$z_i = \sum_{j=0}^{n_a-1} x_{(n_a-1 +  i - j)}y_j, ~~~i= 0, \cdots n_0 -1 $$
+
+Estenda $y_j$ com $y_j=0$ para $j\geq n_a$ e obtemos:
+$$z_i = \sum_{j=0}^{n_a+n_0-1} x_{(n_a-1 +  i - j)}y_j, ~~~i= 0, \cdots n_0 -1 $$
+
+\section{Correlação cruzada}
+Seja
+$$z_i = \sum_{j=0}^{n_a-1} \mu_{i+j}y_j, ~~~i= 0, \cdots n_0 -1 $$
+
+
+
+\end{document}
+

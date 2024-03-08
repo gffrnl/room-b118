@@ -1,0 +1,48 @@
+// Compilar com g++ -std=c++17 cspectral.cpp -o cspectral -lgsl
+#include <gsl/gsl_integration.h>
+#include <cstddef>
+#include <cmath>
+#include <iostream>
+
+
+static double f(double x, void* p) {
+  double const expon = *static_cast<double *>(p);
+  return std::pow(x, expon);
+}
+
+gsl_integration_workspace  * w;
+gsl_integration_qawo_table * t;
+gsl_function F;
+std::size_t levels = 30;
+
+
+double com_qawo(double * err = nullptr) {
+  double err1;
+  double ret;
+  gsl_integration_qawo_table_set(t, k, M_PI, GSL_INTEG_COSINE);
+  gsl_integration_qawo(&F, 0.0, 1.1e-12, 1.1e-12, levels, w, t,
+                       &ret,
+                       &err1);
+  if (err != nullptr) *err = err1;
+  return ret
+}
+
+int main() {
+  using std::cout;
+  using std::endl;
+  double const ealpha = 0.4;
+
+  w = gsl_integration_workspace_alloc(levels);
+  t = gsl_integration_qawo_table_alloc(0, M_PI, GSL_INTEG_COSINE, levels);
+  F.function = &f;
+  F.params = &ealpha;
+
+  double qawo_est_err;
+  for (std::size_t i = 1; i < 30; i += 10) {
+    coud << i << '\t' << com_qawo(&err) << '\t' << qawo_est_err << endl;
+  }
+  
+  gsl_integration_qawo_table_free(t);
+  gsl_integration_workspace_free(w);  
+  return 0;
+}
