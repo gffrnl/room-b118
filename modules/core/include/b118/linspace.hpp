@@ -30,7 +30,7 @@ namespace b118 {
         none  = 0b00,
         left  = 0b01,
         right = 0b10,
-        both  = 0b11, 
+        both  = 0b11,
     };
 }
 

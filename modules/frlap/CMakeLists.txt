@@ -23,44 +23,18 @@ target_sources(b118-frlap
             BASE_DIRS include/
             FILES
                 include/b118/frlap.hpp
-                include/b118/frlap/gdm.hpp
-                # include/b118/frlap/gdm/strategy.hpp
-                include/b118/frlap/gdm/trunc_uniform.hpp
-                # gdm coefficients
-                include/b118/frlap/gdm/coefficients/generator.hpp
-                include/b118/frlap/gdm/coefficients/spectral_qawo.hpp
-                include/b118/frlap/gdm/coefficients/gorenflo_mainardi.hpp
-                include/b118/frlap/gdm/coefficients/huang_oberman_1.hpp
-                include/b118/frlap/gdm/coefficients/huang_oberman_2.hpp
-                include/b118/frlap/gdm/coefficients/centered_3_point_periodized.hpp
-                # gdm
-                include/b118/frlap/gdm/truncated_uniform.hpp
-                include/b118/frlap/gdm/far_field_estimator.hpp
-                # # gdm strategies
-                # include/b118/frlap/gdm/strategies/spectral.hpp
-                # include/b118/frlap/gdm/strategies/spectral_qawo.hpp
-                # include/b118/frlap/gdm/strategies/spectral_tanh_sinh.hpp
-                # include/b118/frlap/gdm/strategies/gorenflo_mainardi.hpp
-                # include/b118/frlap/gdm/strategies/huang_oberman_linear.hpp
-                # include/b118/frlap/gdm/strategies/huang_oberman_quadratic.hpp
-                # include/b118/frlap/gdm/strategies/centered_3_point_periodized.hpp
+                # generalized_differences
+                include/b118/frlap/generalized_differences.hpp
+                # generalized_differences_methods/coefficients
+                include/b118/frlap/generalized_differences_methods/coefficients/generator.hpp
+                include/b118/frlap/generalized_differences_methods/coefficients/spectral_qawo.hpp
+                include/b118/frlap/generalized_differences_methods/coefficients/gorenflo_mainardi.hpp
+                include/b118/frlap/generalized_differences_methods/coefficients/huang_oberman_1.hpp
+                include/b118/frlap/generalized_differences_methods/coefficients/huang_oberman_2.hpp
+                include/b118/frlap/generalized_differences_methods/coefficients/centered_3_point_periodized.hpp
+                # generalized_differences_methods far_field
+                include/b118/frlap/generalized_differences_methods/far_field.hpp
 )
-
-# target_sources(b118-frlap
-#     PRIVATE
-#         src/b118-frlap.cpp
-#         # gdm strategies
-#         src/gdm/strategies/spectral.cpp
-#         src/gdm/strategies/spectral_qawo.cpp
-#         src/gdm/strategies/spectral_tanh_sinh.cpp
-#         src/gdm/strategies/gorenflo_mainardi.cpp
-#         src/gdm/strategies/huang_oberman.cpp
-#         src/gdm/strategies/huang_oberman_linear.cpp
-#         src/gdm/strategies/huang_oberman_quadratic.cpp
-#         src/gdm/strategies/centered_3_point_periodized.cpp
-
-# )
-
 
 target_link_libraries(b118-frlap
     INTERFACE

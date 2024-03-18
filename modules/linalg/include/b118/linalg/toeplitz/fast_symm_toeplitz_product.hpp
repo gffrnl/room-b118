@@ -74,7 +74,7 @@ OutputBidirIt fast_symm_toeplitz_product(
                                         "std::distance(row_beg, row_end) < 0");
 
         if (len == static_cast<decltype(len)>(0))
-            return prod_beg;
+            return prod_beg;  // TODO(gffrnl): prod_beg or std::next(prod_beg)??
 
         if (len == static_cast<decltype(len)>(1)) {
             *prod_beg = (*row_beg) * (*vec_beg);

@@ -26,6 +26,7 @@ target_sources(b118-core
                 include/b118/equal_within_ulps.hpp
                 include/b118/closest_sorted.hpp
                 include/b118/linspace.hpp
+                include/b118/grid.hpp
                 # fftw
                 include/b118/fftw/complex.hpp
                 include/b118/fftw/complex_ptr.hpp

@@ -1,0 +1,150 @@
+// Copyright 2024 Guilherme F. Fornel
+
+#pragma once
+
+#include <utility>
+#include <algorithm>
+#include <b118/frlap/gdm/coefficients/generator.hpp>
+#include <b118/signal/convolution.hpp>
+#include <b118/linalg/toeplitz/fast_symm_toeplitz_product.hpp>
+#include "./generalized_differences_methods/coefficients/generator.hpp"
+#include "./generalized_differences_methods/coefficients/centered_3_point_periodized.hpp"
+#include "./generalized_differences_methods/far_field.hpp"
+
+// // Convolution via dot product
+// // The output fr satisfies:
+// // fr[i] += sum(kernel[input_size - 1 - i + j] * y[j], j = 0 ... input_size - 1), i = 0 .. output_size - 1
+// // kernel[k] must be defined in [0, output_size + input_size - 1]
+// void conv1d_ingenua(std::size_t output_size, std::size_t input_size,
+//                     Real const * const kernel,
+//                     Real const * const y,
+//                     Real       * const fr) {
+//     // Obs: Blas shifts the pointer when INCX < 0:
+//     //  ...
+//     //     IX = 1
+//     //     IY = 1
+//     //     IF (INCX.LT.0) IX = (-N+1)*INCX + 1
+//     //     IF (INCY.LT.0) IY = (-N+1)*INCY + 1
+//     //     DO I = 1,N
+//     //         DTEMP = DTEMP + DX(IX)*DY(IY)
+//     //         IX = IX + INCX
+//     //         IY = IY + INCY
+//     //     END DO
+//     // ...
+//     for (std::size_t i = 0; i < output_size; ++i) {
+//         fr[i] += cblas_ddot(input_size,
+//                             const_cast<Real*>(kernel) + i,
+//                             -1,      // increment on kernel = -1
+//                             const_cast<Real*>(y),
+//                             1);
+//     }
+// }
+
+
+// // Cross-correlation via dot product
+// // The output fr satisfies:
+// // fr[i] += sum(kernel[output_size - 1 - i + j] * y[j], j = 0 ... input_size - 1), i = 0 .. output_size - 1
+// // kernel[k] must be defined in [0, output_size + input_size - 1]
+// void cross1d_ingenua(std::size_t output_size, std::size_t input_size,
+//                      Real const * const kernel,
+//                      Real const * const y,
+//                      Real       * const fr) {
+//     for (std::size_t i = 0; i < output_size; ++i) {
+//         fr[i] += cblas_ddot(input_size,
+//                             const_cast<Real*>(kernel) + (output_size - 1) - i,
+//                             1,      // increment on kernel = 1
+//                             const_cast<Real*>(y),
+//                             1);
+//     }
+// }
+
+namespace b118  {
+namespace frlap {
+
+template<
+    typename Real,
+    template<typename> class CoeffType =
+        b118::frlap::gdm::coefficients::centered_3_point_periodized
+    >
+class generalized_differences final {
+ public:
+    generalized_differences(Real ealpha, Real a, Real b, std::size_t n)
+        : m_ealpha(ealpha),
+          m_deltax((b - a) / static_cast<Real>(n - 1)),
+          m_cgtor(n)
+    {}
+
+    generalized_differences(Real ealpha, std::pair<Real, Real> ab, std::size_t n)
+        : generalized_differences(ealpha, ab.first, ab.second, n)
+    {}
+
+    void compute_truncated(std::vector<Real> const & y     ,
+                   std::size_t                ja     ,
+                   std::size_t                jb     ,
+                   std::vector<Real>&       frLap_y) {  // NOLINT
+        if (jb > y.size()-1)
+            throw "jb > y.size()";
+        if (ja > jb)
+            throw "ja > jb";
+
+        std::size_t const n  = y.size();
+        std::size_t const na = ja;
+        std::size_t const nb = n-1-jb;
+        std::size_t const n0 = jb-ja+1;
+        std::size_t const nc = (jb+1 > n-ja)? jb+1 : n-ja;
+
+        frLap_y.resize(n0);
+        frLap_y.shrink_to_fit();  // TODO(Guilherme): Verificar se é necessário
+
+        m_cgtor.coeffs.resize(nc);
+        m_cgtor.generate(m_ealpha, m_deltax);
+
+        // TODO(Fabio/Guilherme) criar condição para escolher entre convolução
+        //                       e produto.
+        // if (false) {
+        //     conv1d_ingenua(n0, na,  m_cgtor.coeffs.data() + ja - na + 1, y.data(),
+        //                             frLap_y.data());
+
+        //     cross1d_ingenua(n0, nb, m_cgtor.coeffs.data() + 1, y.data() + jb + 1,
+        //                             frLap_y.data());
+        // } else {
+            std::size_t const conv_size = n0 + std::max(na, nb) - 1;
+            convolution<Real> conv(conv_size);
+            conv.create_plans(conv_size);
+            conv.conv(n0, na, m_cgtor.coeffs.data() + ja - na + 1, y.data(), frLap_y.data(),
+                      false);
+            conv.conv(n0, nb, m_cgtor.coeffs.data() + 1, y.data() + jb + 1, frLap_y.data(),
+                      true);
+        // }
+
+        {
+            // std::vector<Real> yint(n0);
+            // // 5.1. Assembly of Yint:
+            // for (size_t i = 0; i < n0; i++)
+            //     yint[i] = y[i+ja];
+            // std::vector<Real> Ayint(n0);
+            // 5.4. Fast symmetric toeplitz-vector A*Yint:
+            // fast_symm_toeplitz_prod(n0, m_cgtor.coeffs.data(), y.data()+ja,
+            //                         frLap_y.data());
+            fast_symm_toeplitz_product<Real>(m_cgtor.coeffs.data(), m_cgtor.coeffs.data() + n0,
+                y.data()+ja, frLap_y.data(), true);
+            // for (std::size_t i = 0; i < n0; i++)
+            //     frLap_y[i] += Ayint[i];
+        }
+    }
+
+    void compute_far_field(std::vector<Real> const & y     ,
+                   std::size_t                ja     ,
+                   std::size_t                jb     ,
+                   std::vector<Real>&       frLap_y) {  // NOLINT
+    }
+
+ private:
+    Real m_ealpha;
+    Real m_deltax;
+    b118::frlap::gdm::coefficients::generator<Real, CoeffType> m_cgtor;
+};
+
+
+}  // end namespace frlap
+}  // end namespace b118
