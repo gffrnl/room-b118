@@ -43,6 +43,9 @@ class matrix<T, matrix_kind::column>
  public:  // constructors
     explicit matrix(size_type sz) : ublas::vector<T>(sz) {}
 
+ public:
+    using ublas::vector<T>::size;
+
  public:  // accessors
     inline const_reference operator()(size_type i) const {
         return ublas::vector<T>::operator()(i-1);

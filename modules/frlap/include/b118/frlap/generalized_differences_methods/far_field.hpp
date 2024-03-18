@@ -30,7 +30,7 @@ class far_field_estimator;
 #include <cmath>
 #include <limits>
 #include <functional>
-#include <b118/frlap.hpp>
+#include "../../frlap.hpp"
 #include <boost/math/quadrature/tanh_sinh.hpp>
 #include <boost/math/special_functions/hypergeometric_pFq.hpp>
 

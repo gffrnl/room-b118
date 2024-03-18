@@ -4,12 +4,16 @@
 
 #include <utility>
 #include <algorithm>
-#include <b118/frlap/gdm/coefficients/generator.hpp>
+#include <stdexcept>
+#include <b118/grid_function.hpp>
 #include <b118/signal/convolution.hpp>
 #include <b118/linalg/toeplitz/fast_symm_toeplitz_product.hpp>
 #include "./generalized_differences_methods/coefficients/generator.hpp"
 #include "./generalized_differences_methods/coefficients/centered_3_point_periodized.hpp"
 #include "./generalized_differences_methods/far_field.hpp"
+
+
+#include <iostream>
 
 // // Convolution via dot product
 // // The output fr satisfies:
@@ -63,86 +67,161 @@ namespace frlap {
 
 template<
     typename Real,
-    template<typename> class CoeffType =
+    template<typename> class CoeffGenerator =
         b118::frlap::gdm::coefficients::centered_3_point_periodized
     >
 class generalized_differences final {
  public:
     generalized_differences(Real ealpha, Real a, Real b, std::size_t n)
         : m_ealpha(ealpha),
-          m_deltax((b - a) / static_cast<Real>(n - 1)),
-          m_cgtor(n)
+          m_deltax((b - a) / static_cast<Real>(n - 1))
     {}
 
-    generalized_differences(Real ealpha, std::pair<Real, Real> ab, std::size_t n)
+    generalized_differences(Real ealpha, std::pair<Real, Real> ab,
+        std::size_t n)
         : generalized_differences(ealpha, ab.first, ab.second, n)
     {}
 
-    void compute_truncated(std::vector<Real> const & y     ,
-                   std::size_t                ja     ,
-                   std::size_t                jb     ,
-                   std::vector<Real>&       frLap_y) {  // NOLINT
-        if (jb > y.size()-1)
-            throw "jb > y.size()";
-        if (ja > jb)
-            throw "ja > jb";
+    generalized_differences(Real ealpha, b118::grid<Real> nodes)
+        : m_ealpha(ealpha), m_nodes(nodes)
+    {}
 
-        std::size_t const n  = y.size();
-        std::size_t const na = ja;
-        std::size_t const nb = n-1-jb;
-        std::size_t const n0 = jb-ja+1;
-        std::size_t const nc = (jb+1 > n-ja)? jb+1 : n-ja;
-
-        frLap_y.resize(n0);
-        frLap_y.shrink_to_fit();  // TODO(Guilherme): Verificar se é necessário
-
-        m_cgtor.coeffs.resize(nc);
-        m_cgtor.generate(m_ealpha, m_deltax);
-
-        // TODO(Fabio/Guilherme) criar condição para escolher entre convolução
-        //                       e produto.
-        // if (false) {
-        //     conv1d_ingenua(n0, na,  m_cgtor.coeffs.data() + ja - na + 1, y.data(),
-        //                             frLap_y.data());
-
-        //     cross1d_ingenua(n0, nb, m_cgtor.coeffs.data() + 1, y.data() + jb + 1,
-        //                             frLap_y.data());
-        // } else {
-            std::size_t const conv_size = n0 + std::max(na, nb) - 1;
-            convolution<Real> conv(conv_size);
-            conv.create_plans(conv_size);
-            conv.conv(n0, na, m_cgtor.coeffs.data() + ja - na + 1, y.data(), frLap_y.data(),
-                      false);
-            conv.conv(n0, nb, m_cgtor.coeffs.data() + 1, y.data() + jb + 1, frLap_y.data(),
-                      true);
-        // }
-
-        {
-            // std::vector<Real> yint(n0);
-            // // 5.1. Assembly of Yint:
-            // for (size_t i = 0; i < n0; i++)
-            //     yint[i] = y[i+ja];
-            // std::vector<Real> Ayint(n0);
-            // 5.4. Fast symmetric toeplitz-vector A*Yint:
-            // fast_symm_toeplitz_prod(n0, m_cgtor.coeffs.data(), y.data()+ja,
-            //                         frLap_y.data());
-            fast_symm_toeplitz_product<Real>(m_cgtor.coeffs.data(), m_cgtor.coeffs.data() + n0,
-                y.data()+ja, frLap_y.data(), true);
-            // for (std::size_t i = 0; i < n0; i++)
-            //     frLap_y[i] += Ayint[i];
-        }
+    inline CoeffGenerator<Real> coefficients_generator() const {
+        return CoeffGenerator<Real>(m_ealpha, m_deltax);
     }
 
-    void compute_far_field(std::vector<Real> const & y     ,
-                   std::size_t                ja     ,
-                   std::size_t                jb     ,
-                   std::vector<Real>&       frLap_y) {  // NOLINT
-    }
+    // void compute_truncated(b118::grid_function<Real> const & Y,
+    //                        b118::grid_function<Real>       * FLY0) {
+    //     if (!((*FLY0).get_grid().is_subgrid(Y.get_grid())))
+    //         throw std::invalid_argument("generalized_differences::"
+    //                                     "compute_truncated() : "
+    //                                     "the grid of *FLY0 is not a subgrid of"
+    //                                     "Y");
+    //     Real const xa = FLY0->get_grid()[0];
+    //     Real const xb = FLY0->get_grid()[FLY0->get_grid().numnodes() - 1];
+    //     std::size_t const ja = Y.get_grid().closest(xa);
+    //     std::size_t const jb = Y.get_grid().closest(xb);
+
+    //     std::cout << "xa = " << xa << std::endl;
+    //     std::cout << "xb = " << xb << std::endl;
+    //     std::cout << "ja = " << ja << std::endl;
+    //     std::cout << "jb = " << jb << std::endl;
+
+    //     std::size_t const n = Y.get_grid().numnodes();
+    //     std::size_t const na = ja;
+    //     std::size_t const nb = n-1-jb;
+    //     std::size_t const n0 = jb-ja+1;
+    //     std::size_t const nc = (jb+1 > n-ja)? jb+1 : n-ja;
+
+    //     m_cgtor.coeffs.resize(nc);
+    //     m_cgtor.generate(m_ealpha, m_nodes.spacing());
+
+    //     // TODO(Fabio/Guilherme) criar condição para escolher entre convolução
+    //     //                       e produto.
+    //     // if (false) {
+    //     //     conv1d_ingenua(n0, na,  m_cgtor.coeffs.data() + ja - na + 1, y.data(),
+    //     //                             frLap_y.data());
+
+    //     //     cross1d_ingenua(n0, nb, m_cgtor.coeffs.data() + 1, y.data() + jb + 1,
+    //     //                             frLap_y.data());
+    //     // } else {
+    //         std::size_t const conv_size = n0 + std::max(na, nb) - 1;
+    //         convolution<Real> conv(conv_size);
+    //         conv.create_plans(conv_size);
+    //         conv.conv(n0, na, m_cgtor.coeffs.data() + ja - na + 1, Y.data(),
+    //                   FLY0->data(),
+    //                   false);
+    //         conv.conv(n0, nb, m_cgtor.coeffs.data() + 1, Y.data() + jb + 1,
+    //                   FLY0->data(),
+    //                   true);
+    //     // }
+
+    //     {
+    //         // std::vector<Real> yint(n0);
+    //         // // 5.1. Assembly of Yint:
+    //         // for (size_t i = 0; i < n0; i++)
+    //         //     yint[i] = y[i+ja];
+    //         // std::vector<Real> Ayint(n0);
+    //         // 5.4. Fast symmetric toeplitz-vector A*Yint:
+    //         // fast_symm_toeplitz_prod(n0, m_cgtor.coeffs.data(), y.data()+ja,
+    //         //                         frLap_y.data());
+    //         fast_symm_toeplitz_product<Real>(m_cgtor.coeffs.data(), m_cgtor.coeffs.data() + n0,
+    //             Y.data()+ja, FLY0->data(), true);
+    //         // for (std::size_t i = 0; i < n0; i++)
+    //         //     frLap_y[i] += Ayint[i];
+    //     }
+    // }
+
+    // void compute_truncated(std::vector<Real> const & y     ,
+    //                std::size_t                ja     ,
+    //                std::size_t                jb     ,
+    //                std::vector<Real>&       frLap_y) {  // NOLINT
+    //     if (jb > y.size()-1)
+    //         throw "jb > y.size()";
+    //     if (ja > jb)
+    //         throw "ja > jb";
+
+    //     std::size_t const n  = y.size();
+    //     std::size_t const na = ja;
+    //     std::size_t const nb = n-1-jb;
+    //     std::size_t const n0 = jb-ja+1;
+    //     std::size_t const nc = (jb+1 > n-ja)? jb+1 : n-ja;
+
+    //     frLap_y.resize(n0);
+    //     frLap_y.shrink_to_fit();  // TODO(Guilherme): Verificar se é necessário
+
+    //     m_cgtor.coeffs.resize(nc);
+    //     m_cgtor.generate(m_ealpha, m_deltax);
+
+    //     // TODO(Fabio/Guilherme) criar condição para escolher entre convolução
+    //     //                       e produto.
+    //     // if (false) {
+    //     //     conv1d_ingenua(n0, na,  m_cgtor.coeffs.data() + ja - na + 1, y.data(),
+    //     //                             frLap_y.data());
+
+    //     //     cross1d_ingenua(n0, nb, m_cgtor.coeffs.data() + 1, y.data() + jb + 1,
+    //     //                             frLap_y.data());
+    //     // } else {
+    //         std::size_t const conv_size = n0 + std::max(na, nb) - 1;
+    //         convolution<Real> conv(conv_size);
+    //         conv.create_plans(conv_size);
+    //         conv.conv(n0, na, m_cgtor.coeffs.data() + ja - na + 1, y.data(), frLap_y.data(),
+    //                   false);
+    //         conv.conv(n0, nb, m_cgtor.coeffs.data() + 1, y.data() + jb + 1, frLap_y.data(),
+    //                   true);
+    //     // }
+
+    //     {
+    //         // std::vector<Real> yint(n0);
+    //         // // 5.1. Assembly of Yint:
+    //         // for (size_t i = 0; i < n0; i++)
+    //         //     yint[i] = y[i+ja];
+    //         // std::vector<Real> Ayint(n0);
+    //         // 5.4. Fast symmetric toeplitz-vector A*Yint:
+    //         // fast_symm_toeplitz_prod(n0, m_cgtor.coeffs.data(), y.data()+ja,
+    //         //                         frLap_y.data());
+    //         fast_symm_toeplitz_product<Real>(m_cgtor.coeffs.data(), m_cgtor.coeffs.data() + n0,
+    //             y.data()+ja, frLap_y.data(), true);
+    //         // for (std::size_t i = 0; i < n0; i++)
+    //         //     frLap_y[i] += Ayint[i];
+    //     }
+    // }
+
+    // void compute_far_field(std::vector<Real> const & y     ,
+    //                std::size_t                ja     ,
+    //                std::size_t                jb     ,
+    //                std::vector<Real>&       frLap_y) {  // NOLINT
+    // }
+
+    // auto get_cgtor() const { return m_cgtor; }
+
+    // Real deltax() const { return m_deltax; }
 
  private:
     Real m_ealpha;
     Real m_deltax;
-    b118::frlap::gdm::coefficients::generator<Real, CoeffType> m_cgtor;
+
+    b118::grid<Real> m_nodes;
 };
 
 

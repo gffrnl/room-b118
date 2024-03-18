@@ -36,86 +36,76 @@ namespace gdm          {
 namespace coefficients {
 
 template<typename Real>
-struct huang_oberman_2 : generator<Real, huang_oberman_2> {
-    using generator<Real, huang_oberman_2>::coeffs;
+class huang_oberman_2 :
+    public generator<Real, huang_oberman_2> {
+    using generator<Real, huang_oberman_2>::ealpha;
+    using generator<Real, huang_oberman_2>::deltax;
 
-    explicit huang_oberman_2(std::size_t n)
-        : generator<Real, huang_oberman_2>(n)
+ public:
+    huang_oberman_2(Real ealpha, Real deltax)
+        : generator<Real, huang_oberman_2>(ealpha, deltax),
+          is_ealpha_one(b118::almost_equal<Real>(ealpha, 1)),
+          ca(is_ealpha_one ? - frlap::normal_const<1, Real>(1)
+                           : - frlap::normal_const<1, Real>(ealpha)),
+          ch(is_ealpha_one ? + static_cast<Real>(1) / deltax
+                           : + pow(deltax, -ealpha))
     {}
 
-    void generate(Real ealpha, Real deltax) {
-        constexpr Real       inv_sqrtpi = b118::numbers::inv_sqrtpi_v<Real>;
-        std::size_t    const n          = coeffs.size();
-
-        {  // Treat the boundary cases ealpha = 0 and ealpha = 2
-            if (b118::almost_equal<Real>(ealpha, 0)) {
-                coeffs[0] = static_cast<Real>(1);
-                std::fill(coeffs.begin() + 1, coeffs.end(),
-                          static_cast<Real>(0));
-                return;
-            }
-
-            if (b118::almost_equal<Real>(ealpha, 2)) {
-                coeffs[0] =   static_cast<Real>(2) / (deltax * deltax);
-                coeffs[1] = - static_cast<Real>(1) / (deltax * deltax);
-                std::fill(coeffs.begin() + 2, coeffs.end(),
-                          static_cast<Real>(0));
-                return;
-            }
+    Real operator() (std::size_t k) {
+        // The boundary cases ealpha = 0 and ealpha = 2
+        if (b118::almost_equal<Real>(ealpha, 0)) {
+            if (k == 0) return static_cast<Real>(1);
+            return static_cast<Real>(0);
+        }
+        if (b118::almost_equal<Real>(ealpha, 2)) {
+            if (k == 0)
+                return   static_cast<Real>(2) / (deltax * deltax);
+            if (k == 1)
+                return - static_cast<Real>(1) / (deltax * deltax);
+            return static_cast<Real>(0);
         }
 
-        {  // Now we treat the general case 0 < ealpha < 2
-            bool const is_ealpha_one
-                          = b118::almost_equal<Real>(ealpha, 1);
-
-            Real const ca = is_ealpha_one
-                          ? - frlap::normal_const<1, Real>(1)
-                          : - frlap::normal_const<1, Real>(ealpha);
-
-            Real const ch = is_ealpha_one
-                          ? + static_cast<Real>(1) / deltax
-                          : + pow(deltax, -ealpha);
-
-            // REMARK: using Log-Gamma function and then
-            //         exponentiate seems better to mitigate
-            //         round-off/approximation errors.
-            //         Since lgamma() computes the log of
-            //         the abs value of Gamma, we only can
-            //         do this because the arguments of
-            //         our Gammas are always positive.
-            //
-            coeffs[0] = ch * inv_sqrtpi * exp2(ealpha)
+        // The general case 0 < ealpha < 2
+        // REMARK: using Log-Gamma function and then
+        //         exponentiate seems better to mitigate
+        //         round-off/approximation errors.
+        //         Since lgamma() computes the log of
+        //         the abs value of Gamma, we only can
+        //         do this because the arguments of
+        //         our Gammas are always positive.
+        //
+        if (k == 0)
+            return ch * b118::numbers::inv_sqrtpi_v<Real> * exp2(ealpha)
                            * exp(lgamma((static_cast<Real>(1) + ealpha)
                                                / static_cast<Real>(2))
                                - lgamma(static_cast<Real>(2)
                                       - ealpha / static_cast<Real>(2)));
 
+        if (k == 1) {
             // Remark: coeffs[1] is continuous at ealpha = 1 but we prefered to
             //         treat it separately.
-
-            if (is_ealpha_one == true) {  // Could test only ealpha == 1
-                coeffs[1] = ca * ch * (static_cast<Real>(8)
+            if (is_ealpha_one == true)
+                return ca * ch * (static_cast<Real>(8)
                                      - static_cast<Real>(5)
                                             * log(static_cast<Real>(3)))
                                       / static_cast<Real>(2);
-            } else {
-                coeffs[1] = ca * ch * coeff_k_1(ealpha);
-            }
 
-            // The formulation in Taylor series allows us to use
-            // the same loop for both cases: alpha = 1 e alpha != 1
-            for (std::size_t k = 2; k < n; k += 2)
-                coeffs[k] = 2.0 * ca * series_even(k, ealpha)
-                                     * pow(deltax * static_cast<Real>(k),
-                                         - ealpha)
-                                     / static_cast<Real>(k);
-
-            for (std::size_t k = 3; k < n; k += 2)
-                coeffs[k] =       ca * series_odd(k, ealpha)
-                                     * pow(deltax * static_cast<Real>(k),
-                                         - ealpha)
-                                     / static_cast<Real>(k);
+            return ca * ch * coeff_k_1(ealpha);
         }
+
+        // The formulation in Taylor series allows us to use
+        // the same loop for both cases: alpha = 1 e alpha != 1
+        if (k%2 == 0)  // k even
+            return 2.0 * ca * series_even(k, ealpha)
+                                     * pow(deltax * static_cast<Real>(k),
+                                         - ealpha)
+                                     / static_cast<Real>(k);
+
+        // k odd
+        return ca * series_odd(k, ealpha)
+                  * pow(deltax * static_cast<Real>(k),
+                        - ealpha)
+                  / static_cast<Real>(k);
     }
 
  public:
@@ -177,6 +167,11 @@ struct huang_oberman_2 : generator<Real, huang_oberman_2> {
         Real const T_2  = 4 + (ealpha + 4) * T_1 / 2;
         return T_2 / (ealpha * (2 - ealpha));
     }
+
+ private:
+    bool const is_ealpha_one;
+    Real const ca;
+    Real const ch;
 };
 
 }  // end namespace coefficients

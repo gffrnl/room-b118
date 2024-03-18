@@ -39,82 +39,95 @@ struct spectral_qawo;
 
 
 template<>
-struct spectral_qawo<double> :
-    generator<double, spectral_qawo> {
-    using generator<double, spectral_qawo>::coeffs;
+class spectral_qawo<double> :
+    public generator<double, spectral_qawo> {
+    using generator<double, spectral_qawo>::ealpha;
+    using generator<double, spectral_qawo>::deltax;
 
-    explicit spectral_qawo(std::size_t n)
-        : generator<double, spectral_qawo>(n)
-    {}
-
-    void generate(double ealpha, double deltax) {
-        constexpr double pi = b118::numbers::inv_sqrtpi_v<double>;
-        std::size_t const n = coeffs.size();
-
-        {  // Treat the boundary cases ealpha = 0 and ealpha = 2
-            if (b118::almost_equal(ealpha, 0.0)) {
-                coeffs[0] = 1.0;
-                std::fill(coeffs.begin() + 1, coeffs.end(), 0.0);
-                return;
-            }
-
-            if (b118::almost_equal(ealpha, 2.0)) {
-                double const c2 = 2.0 / (deltax * deltax);
-                coeffs[0] =  (pi * pi) / (3.0 * deltax * deltax);
-                for (std::size_t k = 1; k < n; k+=2)
-                    coeffs[k] = - c2 / (k * k);
-                for (std::size_t k = 2; k < n; k+=2)
-                    coeffs[k] =   c2 / (k * k);
-                return;
-            }
-        }
-
-        {  // Treat the case ealpha = 1
-            if (b118::almost_equal(ealpha, 1.0)) {
-                double const c1 = 1.0 / (pi * deltax);
-                coeffs[0] =  pi / (2 * deltax);
-                for (std::size_t k = 1; k < n; k+=2)
-                    coeffs[k] = - c1 * (2.0 / (k * k));
-                for (std::size_t k = 2; k < n; k+=2)
-                    coeffs[k] = 0.0;
-                return;
-            }
-        }
-
-        {  // Treat the cases {0 < ealpha < 1} U {1 < ealpha < 2}
-            double err;
-            double ch = 1.0 / (pi * std::pow(deltax, ealpha));
-
-            coeffs[0] = std::pow(pi/deltax, ealpha) / (ealpha + 1.0);
-
-            {
-                gsl_integration_workspace  * w;
-                gsl_integration_qawo_table * t;
-                gsl_function F;
-                size_t levels = 30;
-
-                F.function = &f;
-                F.params = &ealpha;
-
-                w = gsl_integration_workspace_alloc(levels);
-                t = gsl_integration_qawo_table_alloc(0, pi,
-                    GSL_INTEG_COSINE, levels);
-
-                for (std::size_t k = 1; k < n; ++k) {
-                    gsl_integration_qawo_table_set(t, k,
-                        M_PI, GSL_INTEG_COSINE);
-                    gsl_integration_qawo(&F, 0.0, 1.1e-12, 1.1e-12,
-                        levels, w, t, &coeffs[k], &err);
-                    coeffs[k] *= ch;
-                }
-
-                gsl_integration_qawo_table_free(t);
-                gsl_integration_workspace_free(w);
-            }
+ public:
+    spectral_qawo(double ealpha, double deltax)
+        : generator<double, spectral_qawo>(ealpha, deltax),
+          c1(1.0 / (b118::numbers::pi_v<double> * deltax)),
+          c2(2.0 / (deltax * deltax)),
+          ch(1.0 / (b118::numbers::pi_v<double> * std::pow(deltax, ealpha))),
+          levels(30) {
+        if (!b118::almost_equal<double>(ealpha, 0.0) &&
+            !b118::almost_equal<double>(ealpha, 1.0) &&
+            !b118::almost_equal<double>(ealpha, 2.0)) {
+            levels = 30;
+            w = gsl_integration_workspace_alloc(levels);
+            t = gsl_integration_qawo_table_alloc(0,
+                b118::numbers::pi,
+                GSL_INTEG_COSINE, levels);
+            F.function = &f;
+            F.params = &(this->ealpha);
+            err = 0.0;
         }
     }
 
+    ~spectral_qawo() {
+        if (!b118::almost_equal<double>(ealpha, 0.0) &&
+            !b118::almost_equal<double>(ealpha, 1.0) &&
+            !b118::almost_equal<double>(ealpha, 2.0)) {
+            gsl_integration_qawo_table_free(t);
+            gsl_integration_workspace_free(w);
+        }
+    }
+
+    double operator() (std::size_t k) {
+        // The boundary cases ealpha = 0 , ealpha = 1 and ealpha = 2
+        if (b118::almost_equal<double>(ealpha, 0.0)) {
+            if (k == 0) return 1.0;
+            return 0.0;
+        }
+        if (b118::almost_equal<double>(ealpha, 1.0)) {
+            if (k == 0)
+                return b118::numbers::pi_v<double> / (2 * deltax);
+
+            if (k%2 == 0)
+                return 0.0;
+
+            return - c1 * (2.0 / (k * k));
+        }
+        if (b118::almost_equal<double>(ealpha, 2.0)) {
+            if (k == 0)
+                return (b118::numbers::pi_v<double>
+                      * b118::numbers::pi_v<double>)
+                      / (3.0 * deltax * deltax);
+
+            if (k%2 == 0)
+                return c2 / (k * k);
+
+            return - c2 / (k * k);
+        }
+
+        // The cases {0 < ealpha < 1} U {1 < ealpha < 2}
+        if (k == 0)
+            return std::pow(b118::numbers::pi_v<double>/deltax, ealpha)
+                / (ealpha + 1.0);
+
+        double value = 0;
+        gsl_integration_qawo_table_set(t, k,
+            M_PI, GSL_INTEG_COSINE);
+        gsl_integration_qawo(&F, 0.0, 1.1e-12, 1.1e-12,
+            levels, w, t, &value, &err);
+        value *= ch;
+        return value;
+    }
+
+    double get_err() const { return err; }
+
  private:
+    double const c1;
+    double const c2;
+    double const ch;
+
+    std::size_t levels;
+    gsl_integration_workspace  * w;
+    gsl_integration_qawo_table * t;
+    gsl_function F;
+    double err;
+
     static double f(double x, void* p) {
         double const expon = *static_cast<double *>(p);
         return std::pow(x, expon);

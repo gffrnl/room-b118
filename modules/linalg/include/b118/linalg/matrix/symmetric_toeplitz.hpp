@@ -24,7 +24,11 @@
 
 #include <vector>
 #include <memory>
+#include <stdexcept>
 #include "./matrix.hpp"
+#include "./column.hpp"
+#include "../toeplitz/fast_symm_toeplitz_product.hpp"
+
 
 namespace b118 {
 namespace linalg {
@@ -82,6 +86,20 @@ class matrix<T, matrix_kind::symmetric_toeplitz> {
 //  public:  // TODO(gffrnl): REMOVE
 //     std::vector<T> get_data() { return data; }
 };
+
+
+template<typename Real>
+matrix<Real, matrix_kind::column>
+operator*(matrix<Real, matrix_kind::symmetric_toeplitz> const & A,
+          matrix<Real, matrix_kind::column> const & x) {
+    if (x.size() != A.size2())
+        throw std::invalid_argument("A and x are not conform in sizes");
+    matrix<Real, matrix_kind::column> y(x.size());
+    fast_symm_toeplitz_product<Real>(A.cbegin(), A.cend(),
+                                     x.cbegin(),
+                                     y.begin());
+    return y;
+}
 
 }  // end namespace linalg
 }  // end namespace b118

@@ -1,4 +1,5 @@
 // Copyright 2024 Guilherme F. Fornel <gffrnl@gmail.com>
+// Copyright 2024 Guilherme F. Fornel <gffrnl@gmail.com>
 
 #pragma once
 
@@ -11,18 +12,21 @@ namespace gdm          {
 namespace coefficients {
 
 template<typename Real, template<typename> class Method>
-struct generator {
+class generator {
+ public:
     using method = Method<Real>;
 
-    std::vector<Real> coeffs;
-
-    explicit generator(std::size_t n)
-        : coeffs(std::vector<Real>(n))
+    generator(Real ealpha, Real deltax)
+        : ealpha(ealpha), deltax(deltax)
     {}
 
-    void generate(Real ealpha, Real deltax) {
-        reinterpret_cast<Method<Real> *>(this)->generate(ealpha, deltax);
+    Real operator() (std::size_t k) {
+        return reinterpret_cast<Method<Real> *>(this)->operator()(k);
     }
+
+ protected:
+    Real ealpha;
+    Real deltax;
 };
 
 }  // end namespace coefficients

@@ -35,94 +35,91 @@ namespace gdm          {
 namespace coefficients {
 
 template<typename Real>
-struct gorenflo_mainardi : generator<Real, gorenflo_mainardi> {
-    using generator<Real, gorenflo_mainardi>::coeffs;
+class gorenflo_mainardi :
+    public generator<Real, gorenflo_mainardi> {
+    using generator<Real, gorenflo_mainardi>::ealpha;
+    using generator<Real, gorenflo_mainardi>::deltax;
 
-    void generate(Real ealpha, Real deltax) {
-        constexpr Real       pi = b118::numbers::pi_v<Real>;
-        std::size_t    const n  = coeffs.size();
+ public:
+    gorenflo_mainardi(Real ealpha, Real deltax)
+        : generator<Real, gorenflo_mainardi>(ealpha, deltax),
+          is_ealpha_one(b118::almost_equal<Real>(ealpha, 1)),
+          ch(is_ealpha_one ? (static_cast<Real>(1)
+                                 / (deltax * b118::numbers::pi_v<Real>))
+                           : (static_cast<Real>(1)
+                                 / pow(deltax, ealpha)
+                                 / cos(ealpha * b118::numbers::pi_v<Real>
+                                        / static_cast<Real>(2)))),
+          c0(is_ealpha_one ? static_cast<Real>(2) : (
+            (ealpha < static_cast<Real>(1)) ? static_cast<Real>(1)
+                                            : - ealpha)),
+          c1((ealpha * (ealpha - static_cast<Real>(1)) + static_cast<Real>(2))
+                / static_cast<Real>(4)),
+          ck((ealpha < static_cast<Real>(1))     ?
+                (ealpha * (ealpha - static_cast<Real>(1))
+                        / static_cast<Real>(2))  :
+                (ealpha * (static_cast<Real>(2) - ealpha)
+                        * (ealpha - static_cast<Real>(1))
+                        / static_cast<Real>(2)))
+    {}
 
+    Real operator() (std::size_t k) {
         //   - there is a way to mitigate the large errors
         //     when alpha ~~ 1 but alpha != 1 ???
         //   - when alpha == 1 it is better use 1.0/(k*(k+1))
         //     or take the logs and then exponentiate ???
 
-        {  // Treat the boundary cases ealpha = 0 and ealpha = 2
-            if (b118::almost_equal<Real>(ealpha, 0)) {
-                coeffs[0] = static_cast<Real>(1);
-                std::fill(coeffs.begin() + 1, coeffs.end(),
-                          static_cast<Real>(0));
-                return;
-            }
-
-            if (b118::almost_equal<Real>(ealpha, 2)) {
-                coeffs[0] =   static_cast<Real>(2) / (deltax * deltax);
-                coeffs[1] = - static_cast<Real>(1) / (deltax * deltax);
-                std::fill(coeffs.begin() + 2, coeffs.end(),
-                          static_cast<Real>(0));
-                return;
-            }
+        // The boundary cases ealpha = 0 and ealpha = 2
+        if (b118::almost_equal<Real>(ealpha, 0)) {
+            if (k == 0) return static_cast<Real>(1);
+            return static_cast<Real>(0);
+        }
+        if (b118::almost_equal<Real>(ealpha, 2)) {
+            if (k == 0)
+                return   static_cast<Real>(2) / (deltax * deltax);
+            if (k == 1)
+                return - static_cast<Real>(1) / (deltax * deltax);
+            return static_cast<Real>(0);
         }
 
-        {  // Now we treat the general case 0 < ealpha < 2
-            if (b118::almost_equal<Real>(ealpha, 1)) {
-                Real c1 = static_cast<Real>(1) / (deltax * pi);
-                coeffs[0] = c1 * static_cast<Real>(2);
+        // The general case 0 < ealpha < 2
+        if (k == 0)
+            return ch * c0;
 
-                for (std::size_t k = 1; k < n; ++k)
-                    coeffs[k] = - c1
-                        / (static_cast<Real>(k) * static_cast<Real>(k + 1));
-                // or it is better to use ??
-                // coeffs[k] = - c1 / exp(  log(static_cast<Real>(k))
-                //             + log(static_cast<Real>(k+1)) );
-                //
-            } else {
-                Real ch = static_cast<Real>(1) / pow(deltax, ealpha);
-                Real cc = static_cast<Real>(1)
-                    / cos(ealpha * pi / static_cast<Real>(2));
-                Real ca = ealpha;
+        // REMARK: Using Log-Gamma function and then
+        //         exponentiate seems to be better to
+        //         mitigate round-off/approximation errors.
+        //         We only can do this because the result
+        //         of our Gammas are positive, since lgamma()
+        //         computes the logarithm of Gamma's ABSOLUTE
+        //         value.
 
-                // REMARK: Using Log-Gamma function and then
-                //         exponentiate seems to be better to
-                //         mitigate round-off/approximation errors.
-                //         We only can do this because the result
-                //         of our Gammas are positive, since lgamma()
-                //         computes the logarithm of Gamma's ABSOLUTE
-                //         value.
+        if (is_ealpha_one)
+            return - ch / (static_cast<Real>(k) * static_cast<Real>(k + 1));
+                // or it is better to use
+                // - ch / exp(  log(static_cast<Real>(k))
+                //             + log(static_cast<Real>(k+1)) );  ???
 
-                if (ealpha < static_cast<Real>(1)) {
-                    coeffs[0] = cc * ch;
+        if (ealpha > static_cast<Real>(1)) {
+            if (k == 1)
+                return ch * c1;
 
-                    ca *= (ealpha - static_cast<Real>(1)) * ch
-                                / static_cast<Real>(2);
-                    for (std::size_t k = 1; k < n; ++k)
-                    coeffs[k] = cc * (ca * exp(lgamma(static_cast<Real>(k)
-                                                    - ealpha)
-                                             - lgamma(static_cast<Real>(k + 1))
-                                             - lgamma(static_cast<Real>(2)
-                                                    - ealpha)));
-                } else {  // 1 < ealpha < 2
-                    coeffs[0] = - cc * (ca * ch);
-
-                    ca *= (ealpha - static_cast<Real>(1))
-                                        / static_cast<Real>(2);
-                    coeffs[1] = cc * ( (static_cast<Real>(1) + ca) * ch)
-                                        / static_cast<Real>(2);
-
-                    ca *= (static_cast<Real>(2) - ealpha) * ch;
-                    for (std::size_t k = 2; k < n; ++k)
-                        coeffs[k] = cc * (ca * exp(lgamma(
-                                                       static_cast<Real>(k + 1)
-                                                     - ealpha)
-                                                 - lgamma(
-                                                       static_cast<Real>(k + 2))
-                                                 - lgamma(
-                                                       static_cast<Real>(3)
-                                                     - ealpha)));
-                }
-            }
+            return ch * ck * exp(lgamma(static_cast<Real>(k + 1) - ealpha)
+                               - lgamma(static_cast<Real>(k + 2))
+                               - lgamma(static_cast<Real>(3) - ealpha));
         }
+
+        return ch * ck * exp(lgamma(static_cast<Real>(k) - ealpha)
+                           - lgamma(static_cast<Real>(k + 1))
+                           - lgamma(static_cast<Real>(2) - ealpha));
     }
+
+ private:
+    bool const is_ealpha_one;
+    Real const ch;
+    Real const c0;
+    Real const c1;
+    Real const ck;
 };
 
 }  // end namespace coefficients

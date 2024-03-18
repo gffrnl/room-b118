@@ -23,10 +23,10 @@ target_sources(b118-frlap
             BASE_DIRS include/
             FILES
                 include/b118/frlap.hpp
-                # generalized_differences
                 include/b118/frlap/generalized_differences.hpp
                 # generalized_differences_methods/coefficients
                 include/b118/frlap/generalized_differences_methods/coefficients/generator.hpp
+                include/b118/frlap/generalized_differences_methods/coefficients/spectral.hpp
                 include/b118/frlap/generalized_differences_methods/coefficients/spectral_qawo.hpp
                 include/b118/frlap/generalized_differences_methods/coefficients/gorenflo_mainardi.hpp
                 include/b118/frlap/generalized_differences_methods/coefficients/huang_oberman_1.hpp
