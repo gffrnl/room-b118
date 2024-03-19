@@ -4,19 +4,20 @@
 #include <cmath>
 #include <iostream>
 #include <string>
-#include "../install/include/b118/linspace.hpp"
-#include "../install/include/b118/frlap/generalized_differences.hpp"
-#include "../install/include/b118/frlap/generalized_differences_methods/coefficients/huang_oberman_2.hpp"
-#include "../install/include/b118/frlap/generalized_differences_methods/far_field.hpp"
+#include <b118/linspace.hpp>
+#include <b118/frlap/generalized_differences.hpp>
+#include <b118/frlap/generalized_differences_methods/coefficients/huang_oberman_2.hpp>
+#include <b118/frlap/generalized_differences_methods/far_field.hpp>
 
-void write_results(std::string filename,
-                   std::size_t n0,
-                   std::size_t ja,
-                   double const * const X,
-                   double const * const Y,
-                   double const * const FLY_0,
-                   double const * const FF,
-                   double const * const Exact);
+
+#include <b118/grid.hpp>
+
+void write_results(std::string                 filename,
+                   b118::grid<double>          const & G0,
+                   b118::grid_function<double> const & Y0,
+                   b118::grid_function<double> const & FLY0,
+                   b118::grid_function<double> const & FF,
+                   b118::grid_function<double> const & FLYe);
 
 namespace frlap        = b118::frlap;
 namespace gdm          = b118::frlap::gdm;
@@ -45,20 +46,62 @@ int main() {
             * tgamma(0.5+ealpha/2.0) / tgamma(0.5-ealpha/2.0);
     };
 
+    b118::grid G({a, b}, n);
+    b118::grid G0 = G.subgrid({a0, b0});
+
+    b118::grid_function Y   (G, y);
+    b118::grid_function Y0  (G0, y);
+    b118::grid_function FLYe(G0, frLap_y);
+    b118::grid_function FLY0(G0);
+    b118::grid_function FF  (G0);
+
+    // cout << "Y = ";
+    // for (std::size_t k = 0; k < G.numnodes(); ++k)
+    //     cout << Y[k] << ", ";
+    // cout << endl;
+    // cout << "FLYe = ";
+    // for (std::size_t k = 0; k < G0.numnodes(); ++k)
+    //     cout << FLYe[k] << ", ";
+    // cout << endl;
+    // cout << "FLY0 = ";
+    // for (std::size_t k = 0; k < G0.numnodes(); ++k)
+    //     cout << FLY0[k] << ", ";
+    // cout << endl;
+
+    
     frlap::generalized_differences method(ealpha, {a, b}, n);
-    std::vector<double> Y(n);
-    b118::linspace(Y.begin(), Y.end(), a, b);
-    std::vector<double> FLYe{Y};
 
-    std::for_each(Y.begin(), Y.end(), [y](double & x) { x = y(x); });
-    // std::for_each(FLYe.begin(), FLYe.end(), frLap_y);
+    method.compute_truncated(Y, &FLY0); // TODO(gffrnl): error if the grid of FLY0 is not subgrid of the grid of Y
+    // cout << "FLY0 = ";
+    // for (std::size_t k = 0; k < G0.numnodes(); ++k)
+    //     cout << FLY0[k] << ", ";
+    // cout << endl;
 
-    for (auto & elm : Y) cout << elm << ' ';
-    cout << endl;
+    // // Zero far-fieldestimator:
+    // frlap::gdm::far_field_estimator<double, far_field::zero>
+    // ffestim;
+    
+    // General far-field estimator:
+    frlap::gdm::far_field_estimator<double, far_field::general>
+    ffestim(y, method.ealpha(), G);
+    // TODO(gffrnl): Trocar para ffestim(y, method.ealpha(), method.get_grid()) ??;
+    
+    // // Algebric decay far-field estimator:
+    // frlap::gdm::far_field_estimator<double, far_field::algebraic>
+    // ffestim(y, method.ealpha(), G, G0, edecay);
+     
+    // for (std::size_t k = 0; k < G0.numnodes(); ++k)
+    //     FF[k] = ffestim(G0[k]);
 
-    // method.compute_truncated(Y, )
+    method.compute_far_field(ffestim, &FF);
+    
+    // cout << "FF = ";
+    // for (std::size_t k = 0; k < G0.numnodes(); ++k)
+    //     cout << FF[k] << ", ";
+    // cout << endl;
 
-
+    
+    
     // frlap::gdm::far_field_estimator<double, far_field::zero> ffestim_0();
     // frlap::gdm::far_field_estimator<double, far_field::general> ffestim_g(
     //     y, ealpha, deltax, a, b);
@@ -67,39 +110,40 @@ int main() {
 
     if (true) {
         cout << "Writing...\n";
+        write_results("bench-701.dat", G0, Y0, FLY0, FF, FLYe);
     }
 
     return EXIT_SUCCESS;
 }
 
 // Write the results to a file:
-void write_results(std::string filename,
-                   std::size_t n0,
-                   std::size_t ja,
-                   double const * const X,
-                   double const * const Y,
-                   double const * const FLY_0,
-                   double const * const FF,
-                   double const * const Exact) {
+void write_results(std::string                 filename,
+                   b118::grid<double>          const & G0,
+                   b118::grid_function<double> const & Y0,
+                   b118::grid_function<double> const & FLY0,
+                   b118::grid_function<double> const & FF,
+                   b118::grid_function<double> const & FLYe) {
     std::FILE *fp;
 
     if ((fp = std::fopen(filename.c_str(), "w")) == NULL) {
         (void) std::fprintf(stderr,
                             "error: fopen() :"
-                            "cannot open file bench701.dat to write\n");
+                            "cannot open file to write\n");
         std::abort();
     }
 
     (void) std::fprintf(fp,
                         "%-22s\t%-22s\t%-22s\t%-22s\t%-22s\t%-22s\t%-22s\n",
                         "X", "Y", "FLY0", "FF", "FLY", "Exact", "Error");
-    for (std::size_t j = 0; j < n0; ++j)
+    for (std::size_t j = 0; j < G0.numnodes(); ++j) {
+        auto const value = FLY0[j] + FF[j];
         (void) std::fprintf(fp,
                             "%+22.15E\t%+22.15E\t%+22.15E\t%+22.15E\t"
                             "%+22.15E\t%+22.15E\t%+22.15E\n",
-                            X[j+ja], Y[j+ja], FLY_0[j], FF[j],
-                            FLY_0[j]+FF[j],
-                            Exact[j+ja],
-                            fabs(Exact[j+ja]- (FLY_0[j] + FF[j])));
+                            G0[j], Y0[j], FLY0[j], FF[j],
+                            FLY0[j]+FF[j],
+                            FLYe[j],
+                            fabs(FLYe[j]- value));
+    }
     std::fclose(fp);
 }

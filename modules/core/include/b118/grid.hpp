@@ -12,7 +12,7 @@
 
 namespace b118 {
 
-template<typename Real>
+template<typename Real = double>
 class grid {
  public:
     using size_type = std::size_t;
@@ -133,6 +133,10 @@ class grid {
         assert(!(a0 > b0));
 
         return subgrid(this->closest(a0), this->closest(b0));
+    }
+
+    inline grid<Real> subgrid(std::pair<Real, Real> endpoints) {
+        return subgrid(endpoints.first, endpoints.second);
     }
 
     bool has_subgrid(grid<Real> const & other) const {

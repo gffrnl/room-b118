@@ -30,9 +30,11 @@ class far_field_estimator;
 #include <cmath>
 #include <limits>
 #include <functional>
+#include <b118/grid.hpp>
 #include "../../frlap.hpp"
 #include <boost/math/quadrature/tanh_sinh.hpp>
 #include <boost/math/special_functions/hypergeometric_pFq.hpp>
+
 
 namespace b118 {
 namespace frlap {
@@ -51,13 +53,13 @@ template<typename Real>
 class far_field_estimator<Real, far_field::general> final {
  public:
     template<class F>
-    far_field_estimator(F y, Real ealpha, Real deltax, Real a, Real b)
-        : m_deltax(deltax),
-          m_a(a),
-          m_b(b),
+    far_field_estimator(F y, Real ealpha, b118::grid<Real> g)
+        : m_deltax(g[1]- g[0]),
+          m_a(g[0]),
+          m_b(g[g.numnodes() - 1]),
           m_C1a(b118::frlap::normal_const<1>(ealpha)),
-          m_fminus(integrand_minus(ealpha, deltax, y)),
-          m_fplus (integrand_plus (ealpha, deltax, y))  // NOLINT
+          m_fminus(integrand_minus(ealpha, m_deltax, y)),
+          m_fplus (integrand_plus (ealpha, m_deltax, y))  // NOLINT
     {}
 
     Real operator()(Real x) {
@@ -128,17 +130,19 @@ class far_field_estimator<Real, far_field::algebraic> final {
  public:
     template<class F>
     far_field_estimator(F y,
-                        Real ealpha, Real deltax, Real xa, Real xb,
-                        Real xja, Real xjb, Real edecay)
+                        Real ealpha,
+                        b118::grid<Real> domain,
+                        b118::grid<Real> inner_domain,
+                        Real edecay)
         : m_ealpha(ealpha),
-          m_deltax(deltax),
-          m_xa(xa),
-          m_xb(xb),
-          m_xja(xja),
-          m_xjb(xjb),
+          m_deltax(domain[1] - domain[0]),
+          m_xa(domain[0]),
+          m_xb(domain[domain.numnodes() - 1]),
+          m_xja(inner_domain[0]),
+          m_xjb(inner_domain[inner_domain.numnodes() - 1]),
           m_edecay(edecay),
-          m_yja(y(xja)),
-          m_yjb(y(xjb)),
+          m_yja(y(m_xja)),
+          m_yjb(y(m_xjb)),
           m_C1a(b118::frlap::normal_const<1>(ealpha))
     {}
 

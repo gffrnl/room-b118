@@ -8,7 +8,7 @@
 
 namespace b118 {
 
-template<typename Real>
+template<typename Real = double>
 class grid_function {
     grid<Real> thegrid;
     std::vector<Real> values;
@@ -33,6 +33,14 @@ class grid_function {
     {}
 
     inline Real operator[] (typename grid<Real>::size_type k) const {
+#ifdef NDEBUG
+        return values[k];
+#else
+        return values.at(k);
+#endif
+    }
+
+    inline Real& operator[] (typename grid<Real>::size_type k) {
 #ifdef NDEBUG
         return values[k];
 #else
