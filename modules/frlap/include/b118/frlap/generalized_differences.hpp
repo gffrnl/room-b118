@@ -11,9 +11,10 @@
 #include "./generalized_differences_methods/coefficients/generator.hpp"
 #include "./generalized_differences_methods/coefficients/centered_3_point_periodized.hpp"
 #include "./generalized_differences_methods/far_field.hpp"
-
+#include "./generalized_differences_methods/far_field_estimator.hpp"
 
 #include <iostream>
+#include <cassert>
 
 // // Convolution via dot product
 // // The output fr satisfies:
@@ -72,6 +73,12 @@ template<
     >
 class generalized_differences final {
  public:
+    generalized_differences(Real ealpha, b118::grid<Real> nodes)
+        : m_ealpha(ealpha), G_(nodes)
+    {
+        m_deltax = G_[1]-G_[0];
+    }
+ 
     generalized_differences(Real ealpha, Real a, Real b, std::size_t n)
         : m_ealpha(ealpha),
           m_deltax((b - a) / static_cast<Real>(n - 1))
@@ -80,10 +87,6 @@ class generalized_differences final {
     generalized_differences(Real ealpha, std::pair<Real, Real> ab,
         std::size_t n)
         : generalized_differences(ealpha, ab.first, ab.second, n)
-    {}
-
-    generalized_differences(Real ealpha, b118::grid<Real> nodes)
-        : m_ealpha(ealpha), m_nodes(nodes)
     {}
 
     Real ealpha() const { return m_ealpha; }
@@ -157,26 +160,47 @@ class generalized_differences final {
 
     }
 
-    template<class FarFieldEstimator>
-    void compute_far_field(FarFieldEstimator           ffest,
-                           b118::grid_function<Real> * FF) {
+
+    template<
+        template<class...> class FarFieldEstimatorKind,
+        class ...Args
+        >
+    void compute_far_field(FarFieldEstimatorKind<Args...>   ffkind,
+                           b118::grid_function<Real>      * FF    ,
+                           bool inplace = false) {
+        b118::frlap::gdm::far_field_estimator<
+            Real, FarFieldEstimatorKind
+            > ffest(m_ealpha, ffkind, G_, FF->get_grid());
         auto const the_grid = FF->get_grid();
+        // TODO(gffrnl): check the_grid == G0_;
+        assert(the_grid.is_subgrid(G_));
         auto const numnodes = the_grid.numnodes();
-        for (std::size_t k = 0; k < numnodes; ++k)
-            FF->operator[](k) = ffest(the_grid[k]);
+        if (!inplace) {
+            for (std::size_t k = 0; k < numnodes; ++k)
+                (*FF)[k] = ffest(the_grid[k]);
+        } else {
+            for (std::size_t k = 0; k < numnodes; ++k)
+                (*FF)[k] += ffest(the_grid[k]);
+        }
+    }
+
+    template<
+        template<class...> class FarFieldEstimatorKind,
+        class ...Args
+        >
+    void compute(FarFieldEstimatorKind<Args...>         ffkind,
+                 b118::grid_function<Real>      const & Y,
+                 b118::grid_function<Real>            * FL    ) {
+        compute_truncated(Y, FL);
+        compute_far_field(ffkind, FL, true);
     }
     
-    // void compute_far_field(std::vector<Real> const & y     ,
-    //                std::size_t                ja     ,
-    //                std::size_t                jb     ,
-    //                std::vector<Real>&       frLap_y) {  // NOLINT
-    // }
-
  private:
     Real m_ealpha;
     Real m_deltax;
 
-    b118::grid<Real> m_nodes;
+    b118::grid<Real> G_;
+    b118::grid<Real> G0_;
 };
 
 

@@ -34,6 +34,7 @@ target_sources(b118-frlap
                 include/b118/frlap/generalized_differences_methods/coefficients/centered_3_point_periodized.hpp
                 # generalized_differences_methods far_field
                 include/b118/frlap/generalized_differences_methods/far_field.hpp
+                include/b118/frlap/generalized_differences_methods/far_field_estimator.hpp
 )
 
 target_link_libraries(b118-frlap

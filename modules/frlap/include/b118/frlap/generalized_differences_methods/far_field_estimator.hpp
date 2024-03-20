@@ -15,30 +15,33 @@ namespace b118 {
 namespace frlap {
 namespace gdm {
 
-template<typename Real, class EstimatorType>
+template<typename Real, template<class...> class EstimatorKind>
 class far_field_estimator;
 
 
-template<typename Real>
-class far_field_estimator<Real, far_field::zero> final {
- public:
-    // template<class F>
-    // far_field_estimator(F y, Real ealpha, Real deltax, Real a, Real b) {}
-    far_field_estimator() {}
-    Real operator()(Real x) { return static_cast<Real>(0); }
-};
+// template<typename Real>
+// class far_field_estimator<Real, far_field::zero> final {
+//  public:
+//     far_field_estimator() {}
+//     Real operator()([[maybe_unused]] Real const & x) {
+//         return static_cast<Real>(0);
+//     }
+// };
 
 template<typename Real>
 class far_field_estimator<Real, far_field::general> final {
  public:
     template<class F>
-    far_field_estimator(F y, Real ealpha, b118::grid<Real> g)
-        : m_deltax(g[1]- g[0]),
-          m_a(g[0]),
-          m_b(g[g.numnodes() - 1]),
+    far_field_estimator(Real ealpha,
+                        far_field::general<F> ffkind,
+                        b118::grid<Real> G,
+                        b118::grid<Real> G0)
+        : m_deltax(G[1]- G[0]),
+          m_a(G[0]),
+          m_b(G[G.numnodes() - 1]),
           m_C1a(b118::frlap::normal_const<1>(ealpha)),
-          m_fminus(integrand_minus(ealpha, m_deltax, y)),
-          m_fplus (integrand_plus (ealpha, m_deltax, y))  // NOLINT
+          m_fminus(integrand_minus(ealpha, m_deltax, ffkind.y)),
+          m_fplus (integrand_plus (ealpha, m_deltax, ffkind.y))  // NOLINT
     {}
 
     Real operator()(Real x) {
@@ -107,21 +110,19 @@ class far_field_estimator<Real, far_field::general> final {
 template<typename Real>
 class far_field_estimator<Real, far_field::algebraic> final {
  public:
-    template<class F>
-    far_field_estimator(F y,
-                        Real ealpha,
+    far_field_estimator(Real ealpha,
+                        far_field::algebraic<Real> ffkind,
                         b118::grid<Real> domain,
-                        b118::grid<Real> inner_domain,
-                        Real edecay)
+                        b118::grid<Real> inner_domain)
         : m_ealpha(ealpha),
           m_deltax(domain[1] - domain[0]),
           m_xa(domain[0]),
           m_xb(domain[domain.numnodes() - 1]),
           m_xja(inner_domain[0]),
           m_xjb(inner_domain[inner_domain.numnodes() - 1]),
-          m_edecay(edecay),
-          m_yja(y(m_xja)),
-          m_yjb(y(m_xjb)),
+          m_edecay(ffkind.edecay),
+          m_yja(ffkind.yja),
+          m_yjb(ffkind.yjb),
           m_C1a(b118::frlap::normal_const<1>(ealpha))
     {}
 
