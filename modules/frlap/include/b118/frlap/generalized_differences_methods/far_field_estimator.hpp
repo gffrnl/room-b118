@@ -11,9 +11,7 @@
 #include <boost/math/quadrature/tanh_sinh.hpp>
 #include <boost/math/special_functions/hypergeometric_pFq.hpp>
 
-namespace b118 {
-namespace frlap {
-namespace gdm {
+namespace b118 { namespace frlap { namespace gdm {
 
 template<typename Real, template<class...> class EstimatorKind>
 class far_field_estimator;
@@ -163,6 +161,4 @@ class far_field_estimator<Real, far_field::algebraic> final {
     Real m_C1a;
 };
 
-}  // end namespace gdm
-}  // end namespace frlap
-}  // end namespace b118
+}}} // end namespace b118::frlap::gdm
