@@ -1,0 +1,49 @@
+\documentclass[12pt]{standalone}
+\usepackage{plotconfig}
+\begin{document}
+\centering
+
+% Uning Huang-Oberman quadratic coefficients
+\begin{tikzpicture}[baseline]
+\begin{axis} [
+    width=0.7\textwidth,
+    height=0.583333333\textwidth,
+    xmin=-2,
+    xmax=2,
+    ymin=-0.4,
+    ymax=0.8,
+    xtick={-2, -1, 0, 1, 2},
+    ytick={-0.2, 0, 0.2, 0.4, 0.6, 0.8},
+    xlabel = {$x$},
+    ylabel = {$\left(-\partial_{xx}^2\right)^{\alpha/2}\!\!f$},
+    legend columns=2,
+    legend cell align=left,
+    legend style={
+        at={(0.5, 0.225)},
+        anchor=north,
+        font=\small,
+        /tikz/every even column/.append style={column sep=0.5cm}
+    }
+]
+
+% Read the file with the data
+%\pgfplotstableread{\datapath fraclap_fd_scheme_bench_canonic_huaob2.dat}{\datatable};
+\pgfplotstableread{bench-701-algebraic2.dat}{\datatable};
+
+% Exact solution
+\addplot[color=gray, line width=6pt] table [x=X, y=Exact] {\datatable};
+
+% Values of input function
+%\addplot[thick] table [x=x, y=u] {\datatable};
+
+% Approximations
+\addplot[ultra thick] table [x=X, y=FLY] {\datatable};
+\addplot[very thick,  dash dot] table [x=X, y=FLY0] {\datatable};
+\addplot[line width=3.5pt, dotted] table [x=X, y=FF] {\datatable};
+
+% Define the legend
+\legend{Exact, Approx., {Near Field}, {Far Field}};
+
+\end{axis}
+\end{tikzpicture}%
+\end{document}

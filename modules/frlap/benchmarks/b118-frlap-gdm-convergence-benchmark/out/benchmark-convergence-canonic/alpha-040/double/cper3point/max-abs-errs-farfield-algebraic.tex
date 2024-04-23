@@ -1,0 +1,40 @@
+% b118::frlap::gdm Benchmark
+% Canonic convergence Benchmark (alpha = 0.4) (Huang & Oberman 2014)
+% Coefficients from cper3point method
+% Algebraic decay far-field integrator
+
+\documentclass[12pt]{standalone}
+\usepackage{plotconfig}
+\begin{document}
+\centering
+\begin{tikzpicture}
+\begin{loglogaxis} [
+    width=0.6\textwidth, height=0.5\textwidth,
+    xmin=0.6e-3, xmax=1,
+    ymin=0.3e-8, ymax=0.2e-1,
+    xlabel={$h$}, x dir=reverse,
+    %ylabel={$\ell^\infty$ error},
+    ylabel={maximum absolute error},
+    max space between ticks=20,
+    legend cell align=left, legend style={at={(1.07, 1)}, anchor=north west, font=\small}
+]
+
+% Theoretical error y = 0.0134*h^(2)
+\addplot [domain=8e-4:0.8, samples=101, color=gray, line width=6pt, dashed] {0.0134*x^(2)};
+\addlegendentry{$O(h^2)$};
+
+% Read the file with the datatable:
+\pgfplotstableread{max-abs-errs-farfield-algebraic.dat}{\datatable};
+
+% Add the plots from datatable:
+\addplot [mark=o, mark size=2.0pt, very thick]       table [x=h, y={L=4}]   {\datatable}; \addlegendentry{$L=4$};
+\addplot [mark=+, mark size=3.0pt, very thick]       table [x=h, y={L=8}]   {\datatable}; \addlegendentry{$L=8$};
+\addplot [mark=*, mark size=1.6pt, very thick]       table [x=h, y={L=16}]  {\datatable}; \addlegendentry{$L=16$};
+\addplot [mark=x, mark size=3.0pt, very thick]       table [x=h, y={L=32}]  {\datatable}; \addlegendentry{$L=32$};
+\addplot [mark=triangle*, very thick]                table [x=h, y={L=64}]  {\datatable}; \addlegendentry{$L=64$};
+\addplot [mark=square*, mark size=1.5pt, very thick] table [x=h, y={L=128}] {\datatable}; \addlegendentry{$L=128$};
+\addplot [ultra thick, color=blue]                   table [x=h, y={L=256}] {\datatable}; \addlegendentry{$L=256$};
+
+\end{loglogaxis}
+\end{tikzpicture}
+\end{document}

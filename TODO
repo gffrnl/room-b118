@@ -1,0 +1,7 @@
+[ ] (28-fev-24 : gffrnl) Revisar far_field_estimators
+[ ] (01-mar-24 : gffrnl) Mudar a classe de convolução para algo como
+    <https://en.wikipedia.org/wiki/Kernel_(image_processing)>
+[x] (04-mar-24 : gffrnl) Mudar atol e rtol em b118::almost_equal
+[ ] (04-mar-24 : fazedo) Revisar atol e rtol em b118::almost_equal
+[ ] (04-mar-24 : gffrnl, fazedo) Ver se pode retirar b118::almost_equal
+    nas rotinas dos coeficientes
