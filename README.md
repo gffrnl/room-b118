@@ -1,6 +1,8 @@
-# Room-B118 Math Library.
+# Room B-118 Math Library
 
-### Authors:
+![](.b118/B-118.png)
+
+#### Authors:
 * [Guilherme F. Fornel](https://github.com/gffrnl)             &emsp;&emsp;&emsp;&emsp;                    (<gffrnl@gmail.com>)
 * [Fabio Souto de Azevedo](https://github.com/fazedo)          &emsp;&emsp;                                (<fabio.azevedo@ufrgs.br>)
 
