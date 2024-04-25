@@ -99,7 +99,7 @@ b118::linalg::matrix<Real, b118::linalg::matrix_kind::column>
                   b118::linalg::matrix_kind::column
               > const & x) {
         namespace linalg   = b118::linalg;
-        namespace toeplitz = b118::toeplitz;
+        namespace toeplitz = b118::linalg::toeplitz;
 
         if (x.size() != A.size2())
             throw std::invalid_argument("A and x are not conform in sizes");
