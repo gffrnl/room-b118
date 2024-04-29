@@ -77,14 +77,15 @@ class generalized_differences final {
     {
         m_deltax = G_[1]-G_[0];
     }
- 
+
     generalized_differences(Real ealpha, Real a, Real b, std::size_t n)
         : m_ealpha(ealpha),
-          m_deltax((b - a) / static_cast<Real>(n - 1))
+          m_deltax((b - a) / static_cast<Real>(n - 1)),
+          G_(b118::grid<Real>({a, b}, n))
     {}
 
-    generalized_differences(Real ealpha, std::pair<Real, Real> ab,
-        std::size_t n)
+    generalized_differences(Real ealpha,
+                            std::pair<Real, Real> ab, std::size_t n)
         : generalized_differences(ealpha, ab.first, ab.second, n)
     {}
 
@@ -240,7 +241,7 @@ class generalized_differences final {
                            bool inplace = false) {
         b118::frlap::gdm::far_field_estimator<
             Real, FarFieldEstimatorKind
-            > ffest(m_ealpha, ffkind, G_, FF->get_grid());
+            > ffest(m_ealpha, ffkind, G_);
         auto const the_grid = FF->get_grid();
         // TODO(gffrnl): check the_grid == G0_;
         assert(the_grid.is_subgrid(G_));

@@ -18,9 +18,10 @@ class grid {
     using size_type = std::size_t;
 
  private:
-    Real a, b;
-    size_type n;
-    Real step;
+    Real const a;
+    Real const b;
+    size_type const n;
+    Real const step;
 
  public:
     struct iterator {
